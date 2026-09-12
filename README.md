@@ -1,129 +1,36 @@
-# 🌊 FloodSentinel - Sri Lanka Flood Early Warning & Real-Time Radar System
+# 🌦️ Live Weather & Radar Service Branch (`feature/weather-service`)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/Frontend-React%20%2F%20Vite-61DAFB.svg)](https://vitejs.dev/)
-[![Leaflet](https://img.shields.io/badge/Map-Leaflet.js-199900.svg)](https://leafletjs.com/)
-
-**FloodSentinel** is a full-stack, machine-learning-driven disaster early warning system and live meteorological radar tailored for Sri Lanka. Designed for citizens and disaster response authorities (such as the Disaster Management Centre - DMC), it predicts flood occurrence and severity across all 25 Sri Lankan districts using terrain, satellite spectral indices, hydrological stress parameters, and real-time precipitation.
+This branch contains the real-time meteorological ingestion and radar cache service for **FloodSentinel**.
 
 ---
 
-## 📌 Key Highlights
+## 🎯 Branch Purpose
+Primary Owner: **Member 1** (Data Engineering & Weather Service Lead)
 
-- **Real-Time Weather Integration**: Dynamic ingestion of precipitation, 7-day cumulative rainfall, and soil moisture via the **Open-Meteo Weather API**.
-- **Live Doppler Weather Radar**: Interactive animated rain-radar tile layer powered by **RainViewer** overlaid on an interactive Sri Lanka Leaflet map.
-- **Machine Learning Inference Engine**: Cost-sensitive, threshold-optimized ensemble models predicting flood risk and calibrated severity scores.
-- **Four-Tier Alert Level System**:
-  - 🟢 **SAFE (0.00 – 0.25 probability)**: Normal seasonal conditions.
-  - 🟡 **ADVISORY (0.26 – 0.50 probability)**: Moderate risk; monitor river levels and rainfall.
-  - 🟠 **WARNING (0.51 – 0.75 probability)**: High risk; secure documents and prepare evacuation kits.
-  - 🔴 **CRITICAL EMERGENCY (0.76 – 1.00 probability)**: Imminent flooding; immediate evacuation required (DMC Hotline: 117).
-- **Emergency Evacuation Guide**: Automatic distance calculation and routing to the nearest hospital and emergency evacuation shelter.
+Responsible for integrating live, open meteorological APIs to supply real-time rainfall and soil moisture measurements directly into the flood risk prediction engine.
 
 ---
 
-## 🏗️ System Architecture
+## 📡 Integrated Meteorological APIs
 
-```
-[ Sri Lankan Citizens / DMC Officials ]
-                   │
-                   ▼
-┌────────────────────────────────────────────────────────┐
-│               Frontend Web Application                 │
-│         (React / Vite + TailwindCSS + Leaflet)         │
-│  - Live RainViewer Radar Map    - Risk Gauge Meter     │
-│  - 25 District Selector        - Emergency Cards       │
-└──────────────────────────┬─────────────────────────────┘
-                           │ HTTP POST /api/v1/predict
-                           │ HTTP GET  /api/v1/weather/live
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                 Backend REST API                       │
-│                     (FastAPI)                          │
-│  - Open-Meteo Weather Service   - Pydantic Validation  │
-│  - Feature Engineering Engine   - Evacuation Router    │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│            Trained ML Pipeline (.pkl)                  │
-│  - Imbalance Handled (SMOTE / scale_pos_weight)        │
-│  - Calibrated Decision Threshold (>90% Recall)         │
-└────────────────────────────────────────────────────────┘
-```
+### 1. Open-Meteo Weather API
+- **Endpoint**: `https://api.open-meteo.com/v1/forecast`
+- **Features Ingested**:
+  - `precipitation` (mm/h current intensity)
+  - `precipitation_sum` (7-day cumulative rainfall in mm)
+  - `temperature_2m` (°C)
+  - `soil_moisture_0_to_7cm` (m³/m³)
+- **Coverage**: All 25 districts and custom GPS coordinates in Sri Lanka (`Asia/Colombo` timezone).
+- **Authentication**: Free, zero API key required.
+
+### 2. RainViewer Radar API
+- **Endpoint**: `https://api.rainviewer.com/public/weather-maps.json`
+- **Purpose**: Provides real-time and forecasted Doppler radar tile layers for Sri Lanka to render animated rain cloud overlays on the interactive map.
 
 ---
 
-## 📁 Repository Structure
+## 🔌 API Endpoints to Expose
 
-```
-FloodSentinel/
-├── backend/                  # FastAPI REST API & ML Inference Service
-│   ├── app/
-│   │   ├── api/              # API Route Controllers
-│   │   ├── core/             # Configuration & Settings
-│   │   ├── models/           # Pydantic Schemas
-│   │   └── services/         # Weather API & ML Predictor
-│   └── model/                # Serialized Model Artifacts (.pkl & metadata)
-├── frontend/                 # Interactive Radar Dashboard (React + Vite + Leaflet)
-│   ├── src/
-│   │   ├── components/       # Map, Gauge, Evacuation & Alert Components
-│   │   └── assets/
-│   └── package.json
-├── notebooks/                # Machine Learning Pipeline (11 Stages)
-│   └── flood_prediction_sri_lanka.ipynb
-├── data/                     # Dataset Storage
-├── docs/                     # Project Documentation & Viva Voce Guides
-├── docker-compose.yml        # Multi-container local deployment
-└── README.md
-```
-
----
-
-## 👥 Team & Contribution Matrix (Group of 4)
-
-| Member | ML Pipeline Contribution (`model/ml-pipeline`) | Full-Stack & System Contribution |
-| :--- | :--- | :--- |
-| **Member 1** | Steps 1, 2, 4, 6: Problem Definition, Data Ingestion, Data Cleaning & Stratified Splitting | Backend Open-Meteo Live Weather Service & District Defaults |
-| **Member 2** | Steps 3, 5: Geospatial EDA & 6 Mandatory Domain Feature Engineering Techniques | FastAPI Model Loader, Transformer Engine & Alert Categorizer |
-| **Member 3** | Steps 7, 8: 5-Model Selection Benchmarking & 5-Fold Stratified Cross-Validation | Frontend Leaflet Map with RainViewer Animated Radar Layer |
-| **Member 4** | Steps 9, 10, 11: Cost-Sensitive Evaluation, Optuna Tuning & Model Serialization (`.pkl`) | Emergency Evacuation Locator, Risk Gauge, Docker & DevOps |
-
----
-
-## 🚀 Quick Start (Development)
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/GamithaGimhana/FloodSentinel.git
-cd FloodSentinel
-```
-
-### 2. Backend Setup
-```bash
-cd backend
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
-
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-API Documentation will be available at: `http://localhost:8000/docs`
-
-### 3. Frontend Setup
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-Dashboard will be available at: `http://localhost:5173`
-
----
-
-## 📄 License
-This project is licensed under the MIT License.
+- `GET /api/v1/weather/live?lat={lat}&lon={lon}` - Returns live temperature, hourly precipitation, and 7-day cumulative rainfall.
+- `GET /api/v1/weather/districts` - Returns pre-fetched meteorological baselines for all 25 Sri Lankan districts.
+- `GET /api/v1/radar/frames` - Returns timestamped radar tile URLs for the frontend Leaflet map layer.
