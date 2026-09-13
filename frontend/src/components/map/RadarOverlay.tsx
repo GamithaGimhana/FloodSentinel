@@ -113,6 +113,8 @@ export default function RadarOverlay() {
           opacity={opacity}
           zIndex={400}
           tileSize={256}
+          minZoom={4}
+          maxNativeZoom={12}
         />
       )}
 
