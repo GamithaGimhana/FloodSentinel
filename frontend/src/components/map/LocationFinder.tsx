@@ -72,7 +72,7 @@ export default function LocationFinder({ onLocationFound }: LocationFinderProps)
       <button
         onClick={handleLocateMe}
         disabled={locating}
-        className="locate-me-btn"
+        className="location-finder-btn"
         title="Find your real-time GPS location & flood risk"
         id="btn-locate-me"
       >
