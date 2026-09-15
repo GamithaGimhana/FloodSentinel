@@ -2,6 +2,7 @@
 
 import logging
 from typing import Dict, Any
+import math
 
 from app.core.thresholds import ALERT_TIERS, get_alert_tier_by_probability, CALIBRATED_THRESHOLD
 
@@ -22,6 +23,8 @@ class AlertCategorizer:
             Dict with keys: alert_level, alert_emoji, alert_color, risk_score,
                             binary_prediction, recommended_action
         """
+        if not math.isfinite(probability):
+            raise ValueError("Prediction must be finite")
         clamped_prob = max(0.0, min(1.0, probability))
         tier = get_alert_tier_by_probability(clamped_prob)
 
