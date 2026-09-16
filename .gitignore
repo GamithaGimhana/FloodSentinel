@@ -1,9 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments & Virtual Envs
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node & Frontend (branch isolated)
 node_modules/
 dist/
 dist-ssr/
 *.local
-*.log
 *.tsbuildinfo
-.DS_Store
+backend/model/*.pkl
+backend/model/*.joblib
+tmp/
+
+# IDE & OS
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db

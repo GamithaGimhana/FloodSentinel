@@ -1,187 +1,20 @@
-import { useState, useMemo } from "react";
-import { SRI_LANKA_DISTRICTS, District } from "../data/sriLankaDistricts";
-import { Search, Filter, MapPin, Landmark, ShieldAlert, ArrowRight, Droplets } from "lucide-react";
-
-interface DistrictsViewProps {
-  onSelectDistrictAndNavigate: (district: District) => void;
-}
-
-export default function DistrictsView({ onSelectDistrictAndNavigate }: DistrictsViewProps) {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedRisk, setSelectedRisk] = useState<string>("all");
-  const [selectedProvince, setSelectedProvince] = useState<string>("all");
-
-  const provinces = useMemo(() => {
-    return Array.from(new Set(SRI_LANKA_DISTRICTS.map((d) => d.province))).sort();
-  }, []);
-
-  const filteredDistricts = useMemo(() => {
-    return SRI_LANKA_DISTRICTS.filter((d) => {
-      const matchesSearch =
-        d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.riverBasin.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesRisk =
-        selectedRisk === "all" || d.baseRisk.toLowerCase() === selectedRisk.toLowerCase();
-
-      const matchesProvince =
-        selectedProvince === "all" || d.province.toLowerCase() === selectedProvince.toLowerCase();
-
-      return matchesSearch && matchesRisk && matchesProvince;
-    });
-  }, [searchTerm, selectedRisk, selectedProvince]);
-
-  const riskCounts = useMemo(() => {
-    const counts: Record<string, number> = { Critical: 0, High: 0, Moderate: 0, Safe: 0 };
-    SRI_LANKA_DISTRICTS.forEach((d) => {
-      if (d.baseRisk in counts) {
-        counts[d.baseRisk]++;
-      } else {
-        counts.Moderate++;
-      }
-    });
-    return counts;
-  }, []);
-
-  return (
-    <div className="districts-view-container">
-      {/* Top Banner & Summary */}
-      <div className="view-hero-header">
-        <div>
-          <h2 className="view-hero-title">Sri Lanka District Flood Risk Registry</h2>
-          <p className="view-hero-desc">
-            National flood vulnerability index, river catchment basins, and designated evacuation shelters across all 25 administrative districts.
-          </p>
-        </div>
-
-        {/* Quick summary counters */}
-        <div className="risk-counters-row">
-          <div className="risk-counter-chip red">
-            <span className="counter-num">{riskCounts.Critical}</span>
-            <span className="counter-label">Critical</span>
-          </div>
-          <div className="risk-counter-chip orange">
-            <span className="counter-num">{riskCounts.High}</span>
-            <span className="counter-label">High Risk</span>
-          </div>
-          <div className="risk-counter-chip yellow">
-            <span className="counter-num">{riskCounts.Moderate}</span>
-            <span className="counter-label">Moderate</span>
-          </div>
-          <div className="risk-counter-chip green">
-            <span className="counter-num">{riskCounts.Safe}</span>
-            <span className="counter-label">Safe</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="districts-filter-bar">
-        <div className="search-input-wrapper">
-          <Search size={18} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search district, river basin (e.g. Kalutara, Kelani Ganga)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-        </div>
-
-        <div className="filter-dropdowns">
-          <div className="filter-group">
-            <Filter size={15} />
-            <select
-              value={selectedRisk}
-              onChange={(e) => setSelectedRisk(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Risk Levels</option>
-              <option value="critical">Critical Risk</option>
-              <option value="high">High Risk</option>
-              <option value="moderate">Moderate Risk</option>
-              <option value="safe">Safe</option>
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <select
-              value={selectedProvince}
-              onChange={(e) => setSelectedProvince(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">All Provinces</option>
-              {provinces.map((prov) => (
-                <option key={prov} value={prov.toLowerCase()}>
-                  {prov} Province
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* District Cards Grid */}
-      <div className="districts-cards-grid">
-        {filteredDistricts.length === 0 ? (
-          <div className="no-results-box">
-            <ShieldAlert size={36} className="text-slate-500 mb-2" />
-            <p>No districts match your search criteria.</p>
-          </div>
-        ) : (
-          filteredDistricts.map((district) => {
-            const riskClass = district.baseRisk.toLowerCase();
-            return (
-              <div key={district.id} className={`district-card border-top-${riskClass}`}>
-                <div className="district-card-header">
-                  <div>
-                    <h3 className="district-card-title">{district.name}</h3>
-                    <span className="district-card-province">{district.province} Province</span>
-                  </div>
-                  <span className={`risk-badge badge-${riskClass}`}>
-                    {district.baseRisk}
-                  </span>
-                </div>
-
-                <div className="district-card-body">
-                  <div className="district-detail-row">
-                    <span className="detail-label">
-                      <Droplets size={14} /> River Basin
-                    </span>
-                    <span className="detail-value">{district.riverBasin}</span>
-                  </div>
-
-                  <div className="district-detail-row">
-                    <span className="detail-label">
-                      <MapPin size={14} /> Base Elevation
-                    </span>
-                    <span className="detail-value">{district.elevation}m MSL</span>
-                  </div>
-
-                  <div className="district-detail-row">
-                    <span className="detail-label">
-                      <Landmark size={14} /> Designated Shelter
-                    </span>
-                    <span className="detail-value truncate" title={district.nearestEvacCenter}>
-                      {district.nearestEvacCenter}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="district-card-footer">
-                  <button
-                    className="inspect-map-btn"
-                    onClick={() => onSelectDistrictAndNavigate(district)}
-                  >
-                    <span>View on Live Radar Map</span>
-                    <ArrowRight size={14} />
-                  </button>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
+import { useState } from 'react';
+import { Search, ArrowUpRight, Download } from 'lucide-react';
+import { SRI_LANKA_DISTRICTS, type District } from '../data/sriLankaDistricts';
+import { timeLabel, type DistrictSnapshot } from '../services/weatherService';
+import { RiskBadge } from '../components/common/Status';
+export default function DistrictsView({ snapshot, onSelect }: { snapshot: DistrictSnapshot | null; onSelect: (district: District) => void }) {
+  const [search, setSearch] = useState(''); const [level, setLevel] = useState('all');
+  const rows = SRI_LANKA_DISTRICTS.map(d => ({ ...d, telemetry: snapshot?.districts.find(t => t.id === d.id) }));
+  const filtered = rows.filter(d => `${d.name} ${d.province} ${d.riverBasin}`.toLowerCase().includes(search.toLowerCase()) && (level === 'all' || (d.telemetry?.risk_tier ?? 'unavailable') === level));
+  const exportCsv = () => {
+    const quote = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+    const csv = [['District', 'Province', 'Weather status', 'Experimental tier', 'Score /100', 'Engine', 'Rainfall 7d mm', 'Observed at', 'Assumptions'], ...filtered.map(d => [d.name, d.province, d.telemetry?.status ?? 'unavailable', d.telemetry?.risk_tier, d.telemetry?.risk_score, d.telemetry?.prediction?.model_type, d.telemetry?.rain_7d_mm, d.telemetry?.observed_at, d.telemetry?.assumptions.join(' ')])].map(row => row.map(quote).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = 'floodsentinel-districts.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  return <section className="card directory"><div className="card-heading"><div><span className="eyebrow">ISLAND-WIDE COVERAGE</span><h2>25 districts. One view.</h2></div><button className="button secondary" onClick={exportCsv}><Download size={15} />Export CSV</button></div>
+    <p className="muted">Experimental assessments use district terrain and disclosed scenario proxies. Missing readings remain unavailable.</p>
+    <div className="filter-row"><label className="search-box"><Search size={17} /><input aria-label="Search districts" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search district, province or river…" /></label><select aria-label="Filter assessment" value={level} onChange={e => setLevel(e.target.value)}><option value="all">All assessments</option>{['SAFE', 'ADVISORY', 'WARNING', 'CRITICAL', 'unavailable'].map(v => <option key={v} value={v}>{v === 'SAFE' ? 'Safe (experimental)' : v.charAt(0) + v.slice(1).toLowerCase()}</option>)}</select><span className="muted">{filtered.length} districts</span></div>
+    <div className="table-scroll"><table><thead><tr><th>District / province</th><th>River basin</th><th>7-day rain</th><th>Experimental tier</th><th>Observation</th><th><span className="sr-only">Open district</span></th></tr></thead><tbody>{filtered.map(d => <tr key={d.id}><td><strong>{d.name}</strong><small>{d.province}</small></td><td>{d.riverBasin}</td><td>{d.telemetry?.rain_7d_mm != null ? `${d.telemetry.rain_7d_mm} mm` : '—'}</td><td><RiskBadge level={d.telemetry?.risk_tier} /></td><td>{timeLabel(d.telemetry?.observed_at)}</td><td><button className="icon-button" aria-label={`Open ${d.name}`} onClick={() => onSelect(d)}><ArrowUpRight size={18} /></button></td></tr>)}</tbody></table></div>{!filtered.length && <div className="empty-state">No districts match these filters.</div>}
+  </section>;
 }
