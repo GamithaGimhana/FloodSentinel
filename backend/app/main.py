@@ -20,28 +20,24 @@ logger = logging.getLogger("floodsentinel.weather")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager: pre-warms radar and default weather caches on boot."""
-    logger.info("FloodSentinel Meteorological & Radar Service starting up...")
-    try:
-        # Pre-warm radar frames cache
-        await radar_service.fetch_radar_frames()
-        logger.info("RainViewer radar frames cache successfully initialized.")
-    except Exception as exc:
-        logger.warning(f"Failed to pre-warm radar cache on startup: {exc}")
+    import httpx
+    async with httpx.AsyncClient(timeout=settings.HTTP_TIMEOUT_SECONDS) as client:
+        weather_service.client = client
+        radar_service.client = client
+        ml_service.load_pipeline()
+        try:
+            yield
+        finally:
+            weather_service.client = None
+            radar_service.client = None
 
-    # Load ML pipeline (falls back to heuristic if .pkl not found)
-    ml_service.load_pipeline()
-    logger.info(f"ML inference engine initialized in '{ml_service.model_type}' mode.")
-
-    yield
-
-    logger.info("FloodSentinel Meteorological Service shutting down cleanly.")
 
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description=(
-        "Production-grade, asynchronous meteorological ingestion service for **FloodSentinel Sri Lanka**.\n\n"
+        "Academic meteorological and flood-risk demonstration service for **FloodSentinel Sri Lanka**.\n\n"
         "Directly interfaces with **Open-Meteo Weather API** and **RainViewer Radar API** to supply real-time "
         "rainfall intensity, 7-day cumulative precipitations, topsoil saturation, and radar overlays without requiring API keys."
     ),
@@ -54,10 +50,23 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+from fastapi.responses import RedirectResponse
+
+
+@app.get(
+    "/",
+    include_in_schema=False,
+    summary="Root Endpoint",
+    description="Redirects to interactive Swagger API documentation."
+)
+async def root():
+    return RedirectResponse(url="/docs")
 
 
 @app.get(
@@ -68,7 +77,10 @@ app.add_middleware(
 )
 async def health_check():
     return {
-        "status": "healthy",
+        "status": "ready" if ml_service.model_type == "pipeline" else "demo",
+        "model_available": ml_service.model_type == "pipeline",
+        "data_sources": {"weather": "Open-Meteo", "radar": "RainViewer"},
+        "notice": "Academic prototype. Heuristic scores are not calibrated probabilities or official warnings.",
         "service": "FloodSentinel Weather, Radar & ML Inference API",
         "version": settings.VERSION,
         "district_coverage": 25,
@@ -87,4 +99,25 @@ app.include_router(predict_router, prefix=settings.API_V1_STR, tags=["ML Predict
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=False)
+
+
+# A per-process safety limit; deploy a shared gateway limit when using multiple workers.
+from collections import deque
+from time import monotonic
+from cachetools import TTLCache
+from fastapi.responses import JSONResponse
+_request_windows = TTLCache(maxsize=4096, ttl=60)
+
+@app.middleware("http")
+async def limit_api_requests(request, call_next):
+    if request.url.path.startswith("/api/"):
+        key = request.client.host if request.client else "unknown"
+        now = monotonic()
+        window = _request_windows.setdefault(key, deque())
+        while window and window[0] <= now - 60:
+            window.popleft()
+        if len(window) >= 120:
+            return JSONResponse({"detail": "Too many requests; retry in a minute."}, 429, headers={"Retry-After": "60"})
+        window.append(now)
+    return await call_next(request)
