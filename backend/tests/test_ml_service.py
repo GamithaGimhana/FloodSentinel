@@ -29,24 +29,24 @@ def test_engineered_features_formulas():
     expected_stress = round(185.5 / (10 + 1.0), 4)
     assert features.hydrological_stress_index == expected_stress
 
-    # Formula 2: monthly_rainfall / (drainage_index + 0.01)
-    expected_drainage = round(420.0 / (0.32 + 0.01), 4)
+    # Formula 2: rainfall_7d * (1 - drainage_index)
+    expected_drainage = round(185.5 * (1 - 0.32), 4)
     assert features.drainage_saturation_ratio == expected_drainage
 
     # Formula 3: ndwi - ndvi
     expected_contrast = round(0.45 - 0.28, 4)
     assert features.water_veg_contrast == expected_contrast
 
-    # Formula 4: 1000 / (distance_to_river + 1)
-    expected_buffer = round(1000.0 / (450 + 1.0), 4)
+    # Formula 4: exp(-distance_to_river / 1000)
+    expected_buffer = round(math.exp(-450 / 1000), 4)
     assert features.river_proximity_buffer == expected_buffer
 
     # Formula 5: log(pop_density + 1)
     expected_log_pop = round(math.log(3520 + 1), 4)
     assert features.log_population_density == expected_log_pop
 
-    # Formula 6: (rainfall_7d * ndwi) / (elevation + 1)
-    expected_runoff = round((185.5 * 0.45) / (10 + 1.0), 4)
+    # Formula 6: (built_up_percent / 100) / (drainage_index + .01)
+    expected_runoff = round((25 / 100) / (0.32 + .01), 4)
     assert features.runoff_vulnerability == expected_runoff
 
 
