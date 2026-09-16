@@ -1,61 +1,58 @@
+import asyncio
+from unittest.mock import AsyncMock
+import httpx
 import pytest
-from app.services.weather_service import WeatherService, WMO_CODE_MAP
+from app.services.weather_service import WeatherService
 from app.data.districts_geo import SRI_LANKA_DISTRICTS
 
+def test_complete_historical_days_and_current_soil(weather_payload):
+    result = WeatherService()._parse(weather_payload, 6.9, 79.9)
+    assert result.daily.precipitation_sum_7d == 28
+    assert result.daily.max_daily_rainfall == 7
+    assert result.daily.dates[-1] == "2026-09-15"
+    assert result.soil.saturation_pct == 50
+    assert result.current.precipitation == 2  # .5 mm in 15 minutes = 2 mm/hour
+    assert result.current.time.endswith("+05:30")
 
-def test_wmo_code_decoding():
-    service = WeatherService()
-    assert service._decode_wmo(0) == "Clear sky"
-    assert service._decode_wmo(65) == "Heavy rain"
-    assert service._decode_wmo(95) == "Thunderstorm with rain"
-    assert "999" in service._decode_wmo(999)
+def test_missing_data_is_not_silently_zero(weather_payload):
+    weather_payload["daily"]["precipitation_sum"][0] = None
+    with pytest.raises((ValueError, TypeError)):
+        WeatherService()._parse(weather_payload, 6.9, 79.9)
 
+def test_no_future_soil_substitution(weather_payload):
+    weather_payload["hourly"] = {"time": ["2026-09-17T12:00"], "soil_moisture_0_to_7cm": [.45]}
+    with pytest.raises(ValueError):
+        WeatherService()._parse(weather_payload, 6.9, 79.9)
 
-def test_soil_saturation_calculation():
-    service = WeatherService()
-    # At 0.45 m3/m3, saturation is 100%
-    assert service._calc_soil_saturation(0.45) == 100.0
-    # At 0.225 m3/m3, saturation is 50%
-    assert service._calc_soil_saturation(0.225) == 50.0
-    # Low or zero moisture clamped to minimum 5-10%
-    assert service._calc_soil_saturation(0.0) == 10.0
+def test_unavailable_contains_no_invented_data():
+    result = WeatherService()._build_fallback_weather(9, 81)
+    assert result.status == "unavailable"
+    assert result.current is result.daily is result.soil is None
 
+def test_failed_provider_is_explicitly_unavailable():
+    client = AsyncMock()
+    client.get.side_effect = httpx.ConnectError("offline")
+    result = asyncio.run(WeatherService().fetch_live_weather(6.9, 79.9, client))
+    assert result.status == "unavailable"
 
-def test_risk_tier_and_score():
-    service = WeatherService()
-    # Extreme conditions -> CRITICAL
-    tier, score = service._calc_risk_tier_and_score(
-        rain_7d=280.0, rain_current=45.0, soil_sat=95.0, base_vuln=0.9
-    )
-    assert tier == "CRITICAL"
-    assert score >= 0.76
+def test_cache_deduplicates_concurrent_requests(weather_payload):
+    async def check():
+        client = AsyncMock()
+        client.get.return_value = httpx.Response(200, json=weather_payload, request=httpx.Request("GET", "https://example.test"))
+        service = WeatherService()
+        results = await asyncio.gather(*(service.fetch_live_weather(6.9, 79.9, client) for _ in range(5)))
+        assert client.get.await_count == 1
+        assert sum(r.cached for r in results) == 4
+    asyncio.run(check())
 
-    # Normal dry conditions -> SAFE
-    tier_safe, score_safe = service._calc_risk_tier_and_score(
-        rain_7d=15.0, rain_current=0.0, soil_sat=20.0, base_vuln=0.3
-    )
-    assert tier_safe == "SAFE"
-    assert score_safe <= 0.25
-
-
-def test_fallback_weather_structure():
-    service = WeatherService()
-    colombo_lat, colombo_lon = 6.9271, 79.8612
-    fallback = service._build_fallback_weather(colombo_lat, colombo_lon)
-
-    assert fallback.latitude == colombo_lat
-    assert fallback.longitude == colombo_lon
-    assert fallback.current.temperature_2m > 0
-    assert fallback.daily.precipitation_sum_7d > 0
-    assert fallback.soil.saturation_pct > 0
-
-
-def test_all_25_districts_present():
+def test_all_25_districts_present_and_unique():
     assert len(SRI_LANKA_DISTRICTS) == 25
-    district_ids = [d["id"] for d in SRI_LANKA_DISTRICTS]
-    assert "colombo" in district_ids
-    assert "ratnapura" in district_ids
-    assert "kandy" in district_ids
-    assert "galle" in district_ids
-    assert "jaffna" in district_ids
-    assert "batticaloa" in district_ids
+    assert len({d['id'] for d in SRI_LANKA_DISTRICTS}) == 25
+    assert all(d['baseRisk'] in ['Safe', 'Advisory', 'Warning', 'Critical'] for d in SRI_LANKA_DISTRICTS)
+    assert 'nuwara-eliya' in {d['id'] for d in SRI_LANKA_DISTRICTS}
+
+def test_soil_saturation():
+    service = WeatherService()
+    assert service._calc_soil_saturation(0) == 0
+    assert service._calc_soil_saturation(.225) == 50
+    assert service._calc_soil_saturation(.45) == 100

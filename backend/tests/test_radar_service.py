@@ -1,27 +1,23 @@
 import asyncio
-import pytest
 from app.services.radar_service import RadarService
 
+def test_unavailable_radar_has_no_synthetic_tiles():
+    result = RadarService()._build_fallback_radar_frames()
+    assert result.frames == []
+    assert result.latest_frame is None
+    assert result.status == 'unavailable'
 
-def test_fallback_radar_frames():
-    service = RadarService()
-    fallback_resp = service._build_fallback_radar_frames()
+def test_latest_is_observation_not_future_nowcast():
+    result = asyncio.run(RadarService().fetch_radar_frames())
+    assert result.latest_frame.time == 90
+    assert result.frames[-1].time == 110
+    assert result.frames[-1].kind == 'forecast'
 
-    assert fallback_resp.host == "https://tilecache.rainviewer.com"
-    assert len(fallback_resp.frames) == 6
-    assert fallback_resp.latest_frame is not None
-    # Verify Leaflet URL template format
-    latest_tile = fallback_resp.latest_frame.tile_url_template
-    assert "{z}/{x}/{y}" in latest_tile
-    assert latest_tile.endswith(".png")
-
-
-def test_fetch_radar_frames_caching():
-    service = RadarService()
-    # Populate cache directly to verify cached retrieval
-    mock_resp = service._build_fallback_radar_frames()
-    service._cache["frames"] = mock_resp.model_dump()
-
-    res = asyncio.run(service.fetch_radar_frames())
-    assert len(res.frames) == len(mock_resp.frames)
-    assert res.host == mock_resp.host
+def test_cached_frames():
+    async def check():
+        service = RadarService()
+        first = await service.fetch_radar_frames()
+        second = await service.fetch_radar_frames()
+        assert first == second
+        assert '{z}/{x}/{y}' in second.latest_frame.tile_url_template
+    asyncio.run(check())
