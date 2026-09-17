@@ -1,4 +1,4 @@
-"""Alert categorization service mapping raw flood probabilities to 4-tier DMC alert levels."""
+"""Alert categorization service mapping raw flood probabilities to four project display bands."""
 
 import logging
 from typing import Dict, Any

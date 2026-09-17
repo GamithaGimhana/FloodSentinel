@@ -28,3 +28,8 @@ dist-ssr/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Datasets & Docs (kept local / isolated)
+*.csv
+assets/
+docs/

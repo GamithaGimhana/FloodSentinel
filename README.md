@@ -1,13 +1,13 @@
 # ⚙️ Backend REST API & ML Inference Branch (`feature/backend-inference`)
 
-This branch contains the core FastAPI application and model serving engine for **FloodSentinel**.
+This branch contains the core FastAPI model serving engine and validation pipeline for **FloodSentinel**.
 
 ---
 
 ## 🎯 Branch Purpose
 Primary Owner: **Member 2** (ML Optimization & Backend Inference Lead)
 
-Responsible for serving the trained `flood_alert_pipeline.pkl` model, executing on-the-fly feature transformations, applying calibrated decision thresholds, and categorizing flood risk.
+Responsible for serving the trained `flood_alert_pipeline.pkl` model, validating incoming 23-feature telemetry dictionaries against strict Pydantic schemas, executing scenario stress tests, and applying isotonic calibration with the optimal $F_2$ decision threshold.
 
 ---
 
@@ -17,28 +17,42 @@ Responsible for serving the trained `flood_alert_pipeline.pkl` model, executing 
 backend/
 ├── app/
 │   ├── api/
-│   │   ├── predict_routes.py     # POST /api/v1/predict, POST /api/v1/simulate
-│   │   └── district_routes.py    # GET /api/v1/districts
+│   │   ├── v1/
+│   │   │   ├── predict_routes.py     # POST /api/v1/predict, /simulate, /predict/batch
+│   │   │   └── weather.py            # Route registration
 │   ├── core/
-│   │   ├── config.py             # App settings, CORS, model paths
-│   │   └── thresholds.py         # 4-tier alert boundaries & weights
+│   │   ├── config.py                 # App settings, CORS, model paths, rate limiting
+│   │   └── thresholds.py             # 4-tier alert boundaries & decision threshold (0.2258)
 │   ├── models/
-│   │   └── schemas.py            # Pydantic input/output validation models
-│   └── services/
-│       ├── ml_service.py         # Pipeline loader, feature aligner & predictor
-│       └── alert_categorizer.py  # Maps raw probability -> Safe/Advisory/Warning/Critical
-└── model/
-    ├── flood_alert_pipeline.pkl  # Serialized scikit-learn pipeline
-    └── model_metadata.json       # Feature ordering, thresholds & metrics
+│   │   └── schemas.py                # Strict 23-feature Pydantic validation schemas
+│   ├── services/
+│   │   ├── ml_service.py             # Pipeline loader, sample verification & threadsafe predictor
+│   │   ├── scenario.py               # Hydrological baseline builder & scenario simulator
+│   │   └── alert_categorizer.py      # Maps probability -> SAFE / ADVISORY / WARNING / CRITICAL
+│   └── main.py                       # FastAPI lifespan startup & health/readiness endpoints
+└── tests/
+    ├── test_api_endpoints.py         # API contract, validation and error handling tests
+    ├── test_integration.py           # End-to-end inference and scenario simulation tests
+    └── conftest.py                   # Reusable mock fixtures and client test configuration
 ```
 
 ---
 
-## 🚦 Alert Level Decision Logic
+## 🚦 Calibrated Decision Threshold & Alert Policy
 
-| Alert Level | Calibrated Probability | Risk Score | Recommended Action |
-| :--- | :---: | :---: | :--- |
-| 🟢 **SAFE** | 0.00 – 0.25 | 0 – 30 | Normal conditions. |
-| 🟡 **ADVISORY** | 0.26 – 0.50 | 31 – 55 | Monitor DMC river gauges; stay alert. |
-| 🟠 **WARNING** | 0.51 – 0.75 | 56 – 75 | High danger; secure supplies & prepare evacuation kit. |
-| 🔴 **CRITICAL** | 0.76 – 1.00 | 76 – 100 | Imminent flood threat; immediate evacuation (Hotline 117). |
+- **Learned Binary Decision Threshold**: `0.22580644488334656` (derived from cost-sensitive $F_2$ tuning optimizing flood recall $\ge 90\%$).
+- **Display Tiers** (Project policy for intuitive risk visualization):
+  - 🟢 **SAFE**: Probability $\le 0.25$
+  - 🟡 **ADVISORY**: $0.25 < \text{Prob} \le 0.50$
+  - 🟠 **WARNING**: $0.50 < \text{Prob} \le 0.75$
+  - 🔴 **CRITICAL**: $\text{Prob} > 0.75$
+
+---
+
+## 🧪 Testing Backend Inference
+
+From the repository root:
+
+```powershell
+python -m pytest backend/tests/ -q
+```

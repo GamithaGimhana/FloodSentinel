@@ -10,13 +10,7 @@ class Settings(BaseModel):
     VERSION: str = "1.0.0"
 
     # CORS configuration
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-        "*"
-    ]
+    CORS_ORIGINS: List[str] = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',')
 
     # Open-Meteo API config
     OPEN_METEO_BASE_URL: str = os.getenv("OPEN_METEO_BASE_URL", "https://api.open-meteo.com/v1/forecast")

@@ -8,7 +8,7 @@ from app.api.v1.weather import router as weather_router
 from app.api.v1.predict_routes import router as predict_router
 from app.services.weather_service import weather_service
 from app.services.radar_service import radar_service
-from app.services.ml_service import ml_service
+from app.services.ml_service import ml_service, ModelUnavailable
 
 logging.basicConfig(
     level=logging.INFO,
@@ -77,10 +77,10 @@ async def root():
 )
 async def health_check():
     return {
-        "status": "ready" if ml_service.model_type == "pipeline" else "demo",
+        "status": "ready" if ml_service.model_type == "pipeline" else "degraded",
         "model_available": ml_service.model_type == "pipeline",
         "data_sources": {"weather": "Open-Meteo", "radar": "RainViewer"},
-        "notice": "Academic prototype. Heuristic scores are not calibrated probabilities or official warnings.",
+        "notice": "Synthetic-data research model; not an official warning or validated early forecast.",
         "service": "FloodSentinel Weather, Radar & ML Inference API",
         "version": settings.VERSION,
         "district_coverage": 25,
@@ -95,11 +95,6 @@ async def health_check():
 # Register API v1 routes
 app.include_router(weather_router, prefix=settings.API_V1_STR, tags=["Meteorology & Radar"])
 app.include_router(predict_router, prefix=settings.API_V1_STR, tags=["ML Prediction & Simulation"])
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=False)
 
 
 # A per-process safety limit; deploy a shared gateway limit when using multiple workers.
@@ -121,3 +116,31 @@ async def limit_api_requests(request, call_next):
             return JSONResponse({"detail": "Too many requests; retry in a minute."}, 429, headers={"Retry-After": "60"})
         window.append(now)
     return await call_next(request)
+
+
+@app.exception_handler(ModelUnavailable)
+async def model_unavailable_handler(request, exc):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+@app.get('/ready', tags=['System'])
+async def readiness():
+    return JSONResponse(status_code=200 if ml_service.model_type == 'pipeline' else 503,
+                        content={'ready': ml_service.model_type == 'pipeline'})
+
+from app.api.v1.emergency import router as emergency_router
+app.include_router(emergency_router, prefix=settings.API_V1_STR, tags=['Emergency resources'])
+
+# Do not echo invalid values (including NaN/Infinity) back into strict JSON responses.
+from fastapi.exceptions import RequestValidationError
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(request, exc):
+    return JSONResponse(status_code=422, content={'detail': [
+        {'loc': list(error['loc']), 'msg': error['msg'], 'type': error['type']}
+        for error in exc.errors()
+    ]})
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=False)

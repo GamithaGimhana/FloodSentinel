@@ -15,10 +15,8 @@ class AlertTier(NamedTuple):
     recommended_action: str
 
 
-# Default demonstration threshold; replace with a validated model threshold.
-# This value will be updated once the full Optuna tuning pipeline (Step 10) is complete.
-# No measured recall claim is made for this default.
-CALIBRATED_THRESHOLD: float = 0.35
+# Compatibility default for display helpers; inference always uses the verified artifact threshold.
+CALIBRATED_THRESHOLD: float = 0.22580644488334656
 
 # Four project-specific display tiers; these are not official DMC warning levels.
 ALERT_TIERS = [
@@ -31,7 +29,7 @@ ALERT_TIERS = [
         risk_score_min=0,
         risk_score_max=25,
         recommended_action=(
-            "Normal seasonal conditions. This experimental score cannot establish whether a location is safe. "
+            "Lower experimental model score. This cannot establish whether a location is safe. "
             "Continue monitoring DMC river gauge updates during monsoon season."
         ),
     ),
@@ -44,7 +42,7 @@ ALERT_TIERS = [
         risk_score_min=26,
         risk_score_max=50,
         recommended_action=(
-            "Moderate flood risk detected. Monitor DMC river gauges and local rainfall. "
+            "Moderate experimental model score. Monitor DMC river gauges and local rainfall. "
             "Secure important documents in waterproof containers. Stay alert for further advisories."
         ),
     ),
@@ -57,7 +55,7 @@ ALERT_TIERS = [
         risk_score_min=51,
         risk_score_max=75,
         recommended_action=(
-            "High flood danger. Prepare emergency evacuation kit (Go-Bag). "
+            "High experimental model score; check official advisories. Prepare emergency evacuation kit (Go-Bag). "
             "Secure supplies and move valuables to upper floors. "
             "Be ready to evacuate on short notice. DMC Hotline: 117."
         ),
@@ -72,9 +70,9 @@ ALERT_TIERS = [
         risk_score_max=100,
         recommended_action=(
             "Very high experimental risk score. Verify current official DMC guidance. "
-            "Move to designated evacuation shelters or higher ground. "
+            "Follow local authorities on whether and where to evacuate. "
             "Do NOT attempt to cross flooded roads or waterways. "
-            "Emergency contacts: DMC 117 | Ambulance 1990 | Navy Flood Ops 011-2421111."
+            "Emergency contacts: DMC 117 | Ambulance 1990."
         ),
     ),
 ]
