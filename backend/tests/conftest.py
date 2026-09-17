@@ -30,3 +30,27 @@ def no_external_network(monkeypatch, weather_payload):
         }
         return httpx.Response(200, json=data, request=httpx.Request("GET", url))
     monkeypatch.setattr(httpx.AsyncClient, "get", get)
+
+    async def post(client, url, **kwargs):
+        return httpx.Response(200, json={'elements': [
+            {'type': 'node', 'id': 123, 'lat': 6.928, 'lon': 79.862,
+             'tags': {'amenity': 'hospital', 'name': 'Test Hospital'}},
+            {'type': 'way', 'id': 124, 'center': {'lat': 6.93, 'lon': 79.86},
+             'tags': {'emergency': 'assembly_point', 'name': 'Test Assembly'}}
+        ]}, request=httpx.Request('POST', url))
+    monkeypatch.setattr(httpx.AsyncClient, 'post', post)
+    from app.services.emergency_service import emergency_service
+    emergency_service.__init__()
+
+@pytest.fixture
+def client():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    with TestClient(app) as client:
+        yield client
+
+@pytest.fixture
+def payload():
+    import json
+    from app.services.ml_service import MODEL_METADATA_PATH
+    return json.loads(MODEL_METADATA_PATH.read_text())['sample_payloads']['high_risk_flood']
