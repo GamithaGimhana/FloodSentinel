@@ -54,12 +54,13 @@ async def get_all_districts_weather():
     description="Drill-down into an individual district (e.g. 'colombo', 'ratnapura', 'kalutara')."
 )
 async def get_single_district_weather(district_id: str):
-    districts_resp = await weather_service.fetch_districts_weather()
-    target = district_id.strip().lower()
-    for d in districts_resp.districts:
-        if d.id == target:
-            return d
-    raise HTTPException(status_code=404, detail=f"District '{district_id}' not found in Sri Lanka districts registry.")
+    from app.data.districts_geo import SRI_LANKA_DISTRICTS
+    target = district_id.strip().lower().replace("_", "-")
+    district = next((d for d in SRI_LANKA_DISTRICTS if d["id"] == target), None)
+    if district is None:
+        raise HTTPException(status_code=404, detail=f"District '{district_id}' not found.")
+    return await weather_service.fetch_district_weather(district)
+
 
 
 @router.get(

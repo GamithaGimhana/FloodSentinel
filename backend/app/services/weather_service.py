@@ -10,7 +10,8 @@ from app.core.config import settings
 from app.data.districts_geo import SRI_LANKA_DISTRICTS
 from app.models.weather import (LiveWeatherResponse, CurrentWeather, DailyWeather, SoilMetrics,
                                 DistrictTelemetry, DistrictsWeatherResponse)
-from app.services.ml_service import ml_service
+from app.services.ml_service import ml_service, ModelUnavailable
+from app.services.scenario import validated_baseline, ASSUMPTIONS
 
 logger = logging.getLogger(__name__)
 WMO_CODE_MAP: Dict[int, str] = {
@@ -137,19 +138,17 @@ class WeatherService:
     async def fetch_district_weather(self, district):
         weather = await self.fetch_live_weather(district["lat"], district["lon"])
         prediction = None
-        assumptions = ["District reference elevation; river distance assumed to be 1,000 m.",
-                       "Vegetation, drainage and demographic features are scenario proxies."]
+        assumptions = list(ASSUMPTIONS)
         if weather.status == "live":
-            raw = {
-                "latitude": district["lat"], "longitude": district["lon"],
-                "elevation_m": district["elevation_m"], "distance_to_river_m": 1000,
-                "rainfall_7d_mm": weather.daily.precipitation_sum_7d,
-                "monthly_rainfall_mm": weather.daily.precipitation_sum_7d * 3.5,
-                "drainage_index": max(.01, 1 - weather.soil.saturation_pct / 100),
-                "ndvi": .32, "ndwi": .15 + weather.soil.saturation_pct * .005,
-                "population_density_per_km2": 1500, "built_up_percent": 35, "infrastructure_score": 55,
-            }
-            prediction = await run_in_threadpool(ml_service.evaluate, raw)
+            try:
+                raw = validated_baseline(district,
+                    rainfall_7d_mm=weather.daily.precipitation_sum_7d,
+                    monthly_rainfall_mm=weather.daily.precipitation_sum_7d * 3.5,
+                    drainage_index=max(.01, 1 - weather.soil.saturation_pct / 100),
+                    ndwi=.15 + weather.soil.saturation_pct * .005)
+                prediction = await run_in_threadpool(ml_service.evaluate, raw)
+            except (ModelUnavailable, ValueError):
+                assumptions.append('Model assessment unavailable; weather remains available.')
         return DistrictTelemetry(id=district["id"], name=district["name"], province=district["province"],
             latitude=district["lat"], longitude=district["lon"], status=weather.status,
             current_temp=weather.current.temperature_2m if weather.current else None,
