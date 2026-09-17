@@ -4,6 +4,14 @@ This branch contains the full Machine Learning lifecycle for **FloodSentinel - S
 
 ---
 
+## Running the notebook
+
+Open `notebooks/flood_prediction_sri_lanka.ipynb`, select a Python kernel, and click **Run All**. The first code cell installs missing dependencies (including Optuna) into that kernel, so the first run needs internet access and permission to install packages. Later runs reuse those packages.
+
+Keep the dataset at `assets/sri_lanka_flood_risk_dataset_25000.csv`. Both the project root and `notebooks/` work as the kernel's working directory. A full run includes five-model benchmarking, cross-validation, and 25 Optuna trials, so training takes several minutes. The final cells write `flood_alert_pipeline.pkl` and `model_metadata.json` to the project root and reload the model for inference checks.
+
+---
+
 ## 🎯 Branch Purpose
 All 4 group members collaborate directly in this branch to develop, evaluate, and optimize the machine learning models. Every student authors specific steps to ensure an active, balanced GitHub commit history for the viva voce.
 
