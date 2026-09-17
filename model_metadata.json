@@ -1,10 +1,24 @@
 {
     "model_name": "FloodSentinel-EarlyWarning",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "assigned_member": "Member 4 (Deployment & Export)",
     "architecture": "XGBoost + Isotonic Calibration + Threshold Shifting",
-    "decision_threshold": 0.2258,
-    "recall_constraint": ">= 90% Flood Recall",
+    "decision_threshold": 0.22580644488334656,
+    "recall_constraint": ">=90% on threshold-selection validation subset; no future guarantee",
+    "data_scope": "All 25,000 records are marked synthetic; real-event validation is required",
+    "threshold_objective": "Maximize F2 subject to validation recall >=0.90",
+    "training_rows": 17500,
+    "validation_rows": 3750,
+    "test_rows": 3750,
+    "random_seed": 42,
+    "package_versions": {
+        "numpy": "2.3.5",
+        "pandas": "2.3.3",
+        "scikit-learn": "1.9.1",
+        "xgboost": "3.4.1",
+        "cloudpickle": "3.1.2",
+        "joblib": "1.6.0"
+    },
     "test_metrics": {
         "recall": 0.965,
         "precision": 0.5408,
