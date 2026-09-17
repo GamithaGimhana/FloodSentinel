@@ -1,6 +1,6 @@
 export interface Prediction {
   flood_probability: number; risk_score: number; alert_level: 'SAFE' | 'ADVISORY' | 'WARNING' | 'CRITICAL';
-  model_type: 'heuristic' | 'pipeline'; threshold_used: number; binary_prediction: number;
+  model_type: 'pipeline'; model_version: string; data_scope: string; tier_policy: string; threshold_used: number; binary_prediction: number;
   recommended_action: string; engineered_features: Record<string, number>; assumptions?: string[];
 }
 export interface Weather {
@@ -30,7 +30,11 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   try {
     const response = await fetch(`${BASE}${path}`, { ...options, signal: controller.signal,
       headers: { 'Content-Type': 'application/json', ...options.headers } });
-    if (!response.ok) throw new Error(`API request failed (${response.status}). ${response.status === 429 ? 'Please wait a minute.' : 'Check that the backend is running.'}`);
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      const detail = typeof payload?.detail === 'string' ? payload.detail : Array.isArray(payload?.detail) ? payload.detail.map((d: {loc: string[]; msg: string}) => `${d.loc.slice(1).join('.')}: ${d.msg}`).join('; ') : 'Check that the backend is running.';
+      throw new Error(`Request failed (${response.status}). ${response.status === 429 ? 'Please wait a minute.' : detail}`);
+    }
     const contentType = response.headers.get('content-type') ?? '';
     if (!contentType.includes('application/json')) throw new Error('The API is unavailable. Start the backend on port 8000.');
     return await response.json() as T;

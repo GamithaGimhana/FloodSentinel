@@ -6,3 +6,22 @@
 @media(max-width:960px){.sidebar{width:73px;padding:23px 12px;align-items:center}.brand>span:last-child,.workspace-tag,.nav-label,.nav-item .nav-active-dot,.sidebar-bottom{display:none}.sidebar nav{margin-top:45px;width:100%}.nav-item{font-size:0;gap:0;justify-content:center;padding:14px}.nav-item svg{width:20px;height:20px}.main-shell{margin-left:73px;width:calc(100% - 73px)}.simulation-layout{grid-template-columns:1fr 1fr}.page-footer{flex-wrap:wrap}.saved-layout{grid-template-columns:1fr 1.3fr}}
 @media(max-width:760px){.sidebar{position:static;width:100%;height:auto;padding:15px 18px;border-right:0;border-bottom:1px solid var(--line);flex-direction:row;justify-content:space-between;gap:15px}.brand>span:last-child{display:block;font-size:16px}.brand small{font-size:7px}.sidebar nav{display:flex;width:auto;margin:0;gap:4px}.nav-item{padding:11px;margin:0}.app-shell{display:block}.main-shell{margin:0;width:100%}.topbar{height:51px;padding:0 19px}.topbar-right{gap:12px}main{padding:24px 18px 0}.page-heading{align-items:flex-start;gap:10px}.page-heading>.button{padding:10px;font-size:0;gap:0;min-height:35px;margin-top:20px}.page-heading>.button svg{width:16px}.page-heading p{font-size:11px}.eyebrow{font-size:8px}.notice{font-size:9px;align-items:flex-start;padding:11px}.metrics-row{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}.metric>strong{font-size:27px}.metric p{font-size:9px}.overview-grid,.lower-grid{grid-template-columns:1fr;gap:17px}.map-canvas{height:410px}.assessment-card{padding:23px}.assessment-card .risk-result-row{justify-content:flex-start;gap:30px}.assessment-card .detail-list{display:flex;justify-content:space-between;gap:15px}.detail-list>div{display:flex;flex-direction:column;gap:6px}.lower-grid .resource-card{display:none}.preparedness{grid-template-columns:1fr;gap:8px;padding:20px}.page-footer{font-size:8px;line-height:1.8;padding:23px 0}.card-heading h2{font-size:16px}.filter-row{flex-wrap:wrap;gap:10px}.search-box{flex-basis:100%}.filter-row select{flex:1}.directory{padding:17px}.directory .card-heading{align-items:flex-start}.directory .button{font-size:10px;padding:10px;gap:6px}.simulation-layout,.saved-layout{grid-template-columns:1fr}.rain-chart{gap:7px}.map-footer{padding:12px 15px;font-size:8px}.map-footer .text-button{font-size:9px}.radar-controls{flex-wrap:wrap;gap:6px}.radar-controls input[type=range]{max-width:70px}.radar-controls label{margin-left:auto}.map-legend{font-size:7px}.brand-mark{width:30px;height:34px}.notice svg{width:14px}.card{border-radius:9px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.prediction-layout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr); gap:24px; align-items:start }
+.input-fields { border:0; padding:0; margin:16px 0 }
+.input-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px }
+.input-grid .field-label { text-transform:capitalize; margin:0 }
+.input-grid input { display:block; width:100%; border:1px solid var(--border,#dce5e1); border-radius:8px; background:var(--surface,#fff); color:inherit; padding:11px 12px; margin-top:8px; font:inherit }
+.input-grid select { margin-top:8px }
+.emergency-contacts { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin:20px 0 }
+.facility-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin:20px 0 }
+.facility-card { border:1px solid var(--border,#dce5e1); border-radius:12px; padding:20px }
+.facility-card p { display:flex; align-items:center; gap:6px }
+@media(max-width:900px) { .prediction-layout { grid-template-columns:1fr } }
+@media(max-width:500px) { .input-grid { grid-template-columns:1fr } }
+
+/* Keep secondary content readable and the expanded navigation usable on phones. */
+.muted,.fine-print,.field-label,.scenario-field p,.page-heading p { color:#5e726a }
+.eyebrow { color:#587367 }
+.sidebar { overflow-y:auto }
+@media(max-width:760px) { .sidebar { flex-wrap:wrap } .sidebar nav { width:100%; overflow-x:auto; justify-content:space-between } .nav-item { flex-shrink:0 } }

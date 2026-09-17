@@ -1,40 +1,50 @@
 # 🗺️ Frontend Interactive Radar Dashboard Branch (`feature/frontend-radar-map`)
 
-This branch contains the user interface and geospatial visualization system for **FloodSentinel**.
+This branch contains the user interface, geospatial visualization system, and interactive map components for **FloodSentinel**.
 
 ---
 
 ## 🎯 Branch Purpose
 Primary Owner: **Member 3** (Frontend & Geospatial Lead)
 
-Responsible for building a modern, responsive web application that renders an interactive map of Sri Lanka, displays animated live weather radar layers, visualizes district flood alert levels, and lets citizens test custom rainfall scenarios.
+Responsible for building a modern, responsive React/TypeScript application that renders an interactive map of Sri Lanka, displays animated live weather radar layers, visualizes district flood alert levels, and provides an end-to-end 23-feature model assessment interface.
 
 ---
 
 ## 💻 Tech Stack & Libraries
-- **Framework**: React 18 + Vite (ultra-fast build and HMR)
-- **Styling**: Vanilla CSS / TailwindCSS (Clean, modern dark-mode aesthetic)
-- **Map & Geospatial**: `Leaflet` & `react-leaflet`
-- **Radar Tile Engine**: RainViewer API tile overlays with timestamp slider and playback controls
-- **Icons**: Lucide React
+- **Framework**: React 18 + TypeScript + Vite (ultra-fast compilation and HMR)
+- **Styling**: Vanilla CSS / Tailored CSS tokens with a dark/light responsive interface
+- **Map & Geospatial**: `Leaflet` & `react-leaflet` with OpenStreetMap base layers
+- **Radar Tile Engine**: RainViewer API tile overlays with timestamped frame progression
+- **Geospatial Data**: Shared 25-district coordinates registry (`shared/districts.json`)
 
 ---
 
-## 🧩 UI Components
+## 🧩 UI Components & Views
 
 ```
-frontend/src/components/
-├── FloodMap.jsx          # Full Sri Lanka interactive map with GeoJSON polygons & district pins
-├── RadarOverlay.jsx      # Animated Doppler weather radar tile player
-├── DistrictSelector.jsx  # Quick navigation to all 25 Sri Lankan districts
-├── WeatherSummary.jsx    # Real-time rainfall, temperature & humidity card
-├── ScenarioSliders.jsx   # Interactive sliders to test heavy monsoon rainfall scenarios
-└── AlertBanner.jsx       # Color-coded emergency alert status header
+frontend/src/
+├── components/
+│   ├── map/
+│   │   ├── FloodMap.tsx          # Full Sri Lanka interactive Leaflet map with district markers
+│   │   └── RadarOverlay.tsx      # Animated RainViewer Doppler radar tile player
+│   └── common/
+│       └── Status.tsx            # Badge indicators for live system status
+├── views/
+│   ├── DistrictsView.tsx         # 25-district search, filter, and telemetry table
+│   └── PredictionView.tsx        # Full 23-feature model input assessor & JSON importer
+└── services/
+    └── weatherService.ts         # Frontend API client communicating with backend endpoints
 ```
 
 ---
 
-## 🎨 UI Features
-1. **Interactive District Pins**: Color-coded markers (Green, Yellow, Orange, Red) reflecting real-time flood risk.
-2. **Live Radar Animation**: Play/Pause controls to watch precipitation movement across Sri Lanka.
-3. **Citizen Location Finder**: "Use My Location" GPS button to instantly calculate local flood risk.
+## 🚀 Running the Frontend Locally
+
+From the `frontend/` directory or root:
+
+```powershell
+npm run dev --prefix frontend
+```
+
+Accessible at [http://localhost:5173](http://localhost:5173).
