@@ -11,7 +11,7 @@ This branch hosts the complete Machine Learning lifecycle for **FloodSentinel**,
    - Python 3.9+ with Jupyter Notebook or VS Code Jupyter extension.
    - Ensure the dataset is located at: `assets/sri_lanka_flood_risk_dataset_25000.csv`.
 2. **Execution:**
-   - Open [`notebooks/flood_prediction_sri_lanka.ipynb`](file:///notebooks/flood_prediction_sri_lanka.ipynb).
+   - Open [`notebooks/flood_prediction_sri_lanka.ipynb`](notebooks/flood_prediction_sri_lanka.ipynb).
    - Select your Python kernel and click **Run All**.
    - The first code cell automatically verifies and installs missing libraries (`optuna`, `xgboost`, `lightgbm`, `catboost`, `cloudpickle`, etc.) directly into the chosen kernel.
    - Working directory: Both the project root and `notebooks/` are supported.
