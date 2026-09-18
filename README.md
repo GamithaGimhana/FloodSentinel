@@ -5,8 +5,6 @@ This branch contains the real-time meteorological ingestion, Doppler radar frame
 ---
 
 ## 🎯 Branch Purpose
-Primary Owner: **Member 1** (Data Engineering & Weather Service Lead)
-
 Responsible for integrating live, open meteorological APIs (Open-Meteo) and Doppler radar feeds (RainViewer) with resilient in-memory caching and request deduplication, providing nearby emergency shelters and hospital discovery via the OpenStreetMap Overpass API, and maintaining an auditable, persistent district assessment history database.
 
 ---
