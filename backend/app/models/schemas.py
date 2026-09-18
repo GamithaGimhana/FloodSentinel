@@ -1,34 +1,38 @@
 """The exported model's raw feature contract; no implicit inputs for direct predictions."""
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False, extra='forbid')
 
 class PredictionRequest(StrictModel):
     district: str
-    latitude: float = Field(ge=5.8, le=10)
-    longitude: float = Field(ge=79.4, le=82.1)
     elevation_m: float = Field(ge=0, le=2600)
     distance_to_river_m: float = Field(ge=0, le=100000)
-    landcover: Literal['Agriculture', 'Bare Soil', 'Forest', 'Plantation', 'Scrub', 'Urban', 'Wetland']
-    soil_type: Literal['Clay', 'Loamy', 'Peaty', 'Sandy', 'Silty']
-    water_supply: Literal['Municipal', 'Rainwater harvesting', 'Surface water', 'Tube-well', 'Well']
-    electricity: Literal['Grid', 'Mixed', 'Off-grid (solar)']
-    road_quality: Literal['Fair', 'Good (paved)', 'No road access', 'Poor (unpaved)']
+    landcover: Literal['Agriculture', 'Forest', 'Grassland', 'Urban', 'Wetland']
+    soil_type: Literal['Clay', 'Loamy', 'Sandy', 'Silty']
+    water_supply: Literal['Municipal', 'Surface water', 'Well']
+    electricity: Literal['Grid', 'Mixed', 'Off-grid (solar)', 'Unavailable']
+    road_quality: Literal['Fair', 'Good (paved)', 'Poor (unpaved)']
     urban_rural: Literal['Rural', 'Urban']
     rainfall_7d_mm: float = Field(ge=0, le=5000)
-    monthly_rainfall_mm: float = Field(ge=0, le=10000)
+    rainfall_24h_mm: float = Field(ge=0, le=5000)
+    rainfall_30d_mm: float = Field(ge=0, le=10000)
+    height_above_nearest_drainage_m: float = Field(ge=0, le=2600)
+    soil_saturation_index: float = Field(ge=0, le=1)
     drainage_index: float = Field(ge=0, le=1)
-    ndvi: float = Field(ge=-1, le=1)
-    ndwi: float = Field(ge=-1, le=1)
-    water_presence_flag: Literal['Likely', 'Unlikely']
     historical_flood_count: int = Field(ge=0, le=10000)
     infrastructure_score: float = Field(ge=0, le=100)
     population_density_per_km2: float = Field(ge=0, le=1000000)
     built_up_percent: float = Field(ge=0, le=100)
     nearest_hospital_km: float = Field(ge=0, le=1000)
     nearest_evac_km: float = Field(ge=0, le=1000)
+
+    @model_validator(mode='after')
+    def rainfall_order(self):
+        if not self.rainfall_24h_mm <= self.rainfall_7d_mm <= self.rainfall_30d_mm:
+            raise ValueError('Rainfall must satisfy 24h <= 7d <= 30d')
+        return self
 
     @field_validator('district')
     @classmethod
@@ -42,7 +46,7 @@ class PredictionRequest(StrictModel):
 class EngineeredFeatures(StrictModel):
     hydrological_stress_index: float
     drainage_saturation_ratio: float
-    water_veg_contrast: float
+    rainfall_intensity_ratio: float
     river_proximity_buffer: float
     log_population_density: float
     runoff_vulnerability: float
@@ -58,18 +62,20 @@ class PredictionResponse(StrictModel):
     engineered_features: EngineeredFeatures
     model_type: Literal['pipeline'] = 'pipeline'
     model_version: str = 'unknown'
+    input_warnings: list[str] = Field(default_factory=list)
     threshold_used: float
-    data_scope: str = 'Synthetic training data; experimental current-event classification, not a validated forecast.'
-    tier_policy: str = 'Display tiers are separate from the binary decision threshold; SAFE is not a safety guarantee.'
+    data_scope: str = 'Synthetic balanced training distribution (50% flood); score is not a real-world flood probability or validated forecast.'
+    tier_policy: str = 'Colour bands describe experimental score ranges. The binary decision uses the model threshold; a lower score does not establish safety.'
 
 class SimulationRequest(StrictModel):
-    rainfall_7d_mm: float = Field(default=50, ge=0, le=500)
-    distance_to_river_m: float = Field(default=2000, ge=50, le=5000)
-    elevation_m: float = Field(default=50, ge=0, le=2500)
+    rainfall_7d_mm: float = Field(default=50, ge=0, le=5000)
+    distance_to_river_m: float = Field(default=2000, ge=0, le=100000)
+    elevation_m: float = Field(default=50, ge=0, le=2600)
     soil_saturation_pct: float = Field(default=40, ge=0, le=100)
-    monthly_rainfall_mm: float | None = Field(default=None, ge=0, le=10000)
-    ndvi: float | None = Field(default=None, ge=-1, le=1)
-    ndwi: float | None = Field(default=None, ge=-1, le=1)
+    rainfall_24h_mm: float | None = Field(default=None, ge=0, le=5000)
+    rainfall_30d_mm: float | None = Field(default=None, ge=0, le=10000)
+    height_above_nearest_drainage_m: float = Field(default=5, ge=0, le=2600)
+    drainage_index: float = Field(default=.5, ge=0, le=1)
     district: str | None = None
 
 class SimulationResponse(PredictionResponse):
@@ -82,3 +88,24 @@ class BatchPredictionRequest(StrictModel):
 class BatchPredictionResponse(StrictModel):
     total: int
     predictions: list[PredictionResponse]
+
+class ForecastRequest(StrictModel):
+    site: PredictionRequest
+    latitude: float = Field(ge=5.8, le=10)
+    longitude: float = Field(ge=79.4, le=82.1)
+    days: int = Field(default=7, ge=1, le=7)
+
+class ForecastDay(StrictModel):
+    valid_date: str
+    inputs: PredictionRequest
+    prediction: PredictionResponse
+
+class ForecastResponse(StrictModel):
+    generated_at: str
+    weather_reference_time: str
+    latitude: float
+    longitude: float
+    source: str = 'Open-Meteo'
+    forecast_type: str = 'Weather-conditioned synthetic scenario projection; not a validated flood forecast'
+    assumptions: list[str]
+    days: list[ForecastDay]

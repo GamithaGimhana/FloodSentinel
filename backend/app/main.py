@@ -37,7 +37,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description=(
-        "Academic meteorological and flood-risk demonstration service for **FloodSentinel Sri Lanka**.\n\n"
+        "Meteorological monitoring and versioned flood scenario inference service for **FloodSentinel Sri Lanka**.\n\n"
         "Directly interfaces with **Open-Meteo Weather API** and **RainViewer Radar API** to supply real-time "
         "rainfall intensity, 7-day cumulative precipitations, topsoil saturation, and radar overlays without requiring API keys."
     ),

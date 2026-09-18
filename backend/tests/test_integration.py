@@ -25,9 +25,9 @@ def test_real_artifact_parity_for_both_exported_samples(client):
         assert 'Synthetic' in result['data_scope']
 
 
-@pytest.mark.parametrize('changes', [{'latitude': 90}, {'drainage_index': -1}, {'ndwi': 2},
+@pytest.mark.parametrize('changes', [{'latitude': 90}, {'drainage_index': -1}, {'soil_saturation_index': 2},
     {'historical_flood_count': 1.5}, {'district': 'unknown'}, {'inundation_area_sqm': 100},
-    {'nearest_evac_km': -1}, {'electricity': ''}])
+    {'nearest_evac_km': -1}, {'electricity': ''}, {'rainfall_24h_mm': -1}])
 def test_invalid_and_leakage_fields_rejected(client, payload, changes):
     assert client.post('/api/v1/predict', json={**payload, **changes}).status_code == 422
 
@@ -38,7 +38,7 @@ def test_missing_fields_are_not_silent_assumptions(client, payload):
 
 
 def test_nan_rejected(client, payload):
-    payload['ndwi'] = float('nan')
+    payload['rainfall_7d_mm'] = float('nan')
     response = client.post('/api/v1/predict', content=json.dumps(payload), headers={'content-type': 'application/json'})
     assert response.status_code == 422
 
@@ -52,11 +52,11 @@ def test_batch_and_limits(client, payload):
 
 
 def test_simulator_uses_full_pipeline_and_explicit_assumptions(client):
-    response = client.post('/api/v1/simulate', json={'district': 'colombo', 'monthly_rainfall_mm': 0})
+    response = client.post('/api/v1/simulate', json={'district': 'colombo', 'rainfall_30d_mm': 80})
     assert response.status_code == 200
     result = response.json()
-    raw = scenario_input(SimulationRequest(district='colombo', monthly_rainfall_mm=0))
-    assert raw['monthly_rainfall_mm'] == 0
+    raw = scenario_input(SimulationRequest(district='colombo', rainfall_30d_mm=80))
+    assert raw['rainfall_30d_mm'] == 80
     assert result['flood_probability'] == ml_service.evaluate(raw).flood_probability
     assert result['assumptions']
     assert client.post('/api/v1/simulate', json={'district': 'unknown'}).status_code == 422
