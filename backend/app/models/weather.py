@@ -11,6 +11,8 @@ class CurrentWeather(BaseModel):
     time: str
 
 class DailyWeather(BaseModel):
+    precipitation_sum_24h: float
+    precipitation_sum_30d: float
     precipitation_sum_7d: float
     max_daily_rainfall: float
     dates: list[str]
@@ -19,6 +21,13 @@ class DailyWeather(BaseModel):
 class SoilMetrics(BaseModel):
     soil_moisture_surface: float
     saturation_pct: float
+
+class ForecastWeatherDay(BaseModel):
+    date: str
+    rainfall_24h_mm: float
+    rainfall_7d_mm: float
+    rainfall_30d_mm: float
+    soil_saturation_index: float
 
 class LiveWeatherResponse(BaseModel):
     latitude: float
@@ -31,6 +40,8 @@ class LiveWeatherResponse(BaseModel):
     daily: DailyWeather | None = None
     soil: SoilMetrics | None = None
     elevation_m: float | None = None
+    forecast: list[ForecastWeatherDay] = Field(default_factory=list)
+    forecast_status: str = 'unavailable'
     cached: bool = False
     cached_at: str | None = None
 

@@ -1,0 +1,50 @@
+{
+    "model_name": "FloodSentinel Sri Lanka Flood Prediction Pipeline",
+    "version": "0.1.0-heuristic",
+    "status": "awaiting_training",
+    "description": "Placeholder metadata. Will be updated once the full ML training pipeline (Steps 7-11) is complete and the model is serialized.",
+    "threshold": 0.35,
+    "feature_order": [
+        "latitude",
+        "longitude",
+        "elevation_m",
+        "distance_to_river_m",
+        "rainfall_7d_mm",
+        "monthly_rainfall_mm",
+        "drainage_index",
+        "ndvi",
+        "ndwi",
+        "population_density_per_km2",
+        "built_up_percent",
+        "infrastructure_score",
+        "hydrological_stress_index",
+        "drainage_saturation_ratio",
+        "water_veg_contrast",
+        "river_proximity_buffer",
+        "log_population_density",
+        "runoff_vulnerability"
+    ],
+    "engineered_features": {
+        "hydrological_stress_index": "rainfall_7d_mm / (elevation_m + 1.0)",
+        "drainage_saturation_ratio": "monthly_rainfall_mm / (drainage_index + 0.01)",
+        "water_veg_contrast": "ndwi - ndvi",
+        "river_proximity_buffer": "1000 / (distance_to_river_m + 1.0)",
+        "log_population_density": "log(population_density_per_km2 + 1)",
+        "runoff_vulnerability": "(rainfall_7d_mm * ndwi) / (elevation_m + 1.0)"
+    },
+    "target_variable": "flood_occurrence_current_event",
+    "dataset": {
+        "name": "sri_lanka_flood_risk_dataset_25000.csv",
+        "records": 25000,
+        "flood_rate_pct": 9.89,
+        "train_split": 0.70,
+        "val_split": 0.15,
+        "test_split": 0.15
+    },
+    "alert_tiers": {
+        "SAFE": "0.00 - 0.25",
+        "ADVISORY": "0.26 - 0.50",
+        "WARNING": "0.51 - 0.75",
+        "CRITICAL": "0.76 - 1.00"
+    }
+}
