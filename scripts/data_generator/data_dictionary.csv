@@ -1,0 +1,47 @@
+column,dtype,description,model_role
+record_id,object,Unique synthetic site-scenario ID; never a feature.,exclude_or_metadata
+district,object,Sri Lankan district scenario stratum; equal sampling is not national representativeness.,candidate_predictor
+place_name,object,Invented site identifier; not a real village or address.,exclude_or_metadata
+latitude,float64,Approximate district-capital latitude in degrees; not site location; manually assigned.,exclude_or_metadata
+longitude,float64,Approximate district-capital longitude in degrees; not site location; manually assigned.,exclude_or_metadata
+elevation_m,float64,Assumed site elevation above sea level (m); not DEM-derived.,candidate_predictor
+distance_to_river_m,float64,Simulated river distance (m); no mapped river match.,candidate_predictor
+landcover,object,Assumed landcover category; no satellite extraction.,candidate_predictor
+soil_type,object,Assumed soil texture category.,candidate_predictor
+water_supply,object,Assumed baseline water supply; not an event outage record.,candidate_predictor
+electricity,object,Assumed baseline electricity access; Unavailable avoids CSV NA ambiguity.,candidate_predictor
+road_quality,object,Baseline category derived from synthetic infrastructure score.,candidate_predictor
+population_density_per_km2,int64,"Simulated density, people per km2.",candidate_predictor
+built_up_percent,float64,"Simulated built area percent, 0–100.",candidate_predictor
+urban_rural,object,Simulated settlement class.,candidate_predictor
+rainfall_7d_mm,float64,Simulated trailing 7-day rainfall including scenario day.,candidate_predictor
+monthly_rainfall_mm,float64,"Compatibility alias of rainfall_30d_mm, NOT calendar-month rainfall; drop duplicate.",exclude_or_metadata
+drainage_index,float64,"Assumed drainage effectiveness, 0–1, higher is better.",candidate_predictor
+ndvi,float64,"Simulated post-event vegetation index [-1,1]; outcome-derived; exclude from forecasting.",exclude_or_metadata
+ndwi,float64,"Simulated post-event water index [-1,1]; outcome-derived; exclude from forecasting.",exclude_or_metadata
+water_presence_flag,object,Likely if synthetic post-event NDWI > 0.1; exclude from forecasting.,exclude_or_metadata
+historical_flood_count,int64,Assumed flood count in a notional preceding 10-year window; no historical records.,candidate_predictor
+infrastructure_score,int64,"Synthetic baseline infrastructure index 0–100, not an official index.",candidate_predictor
+nearest_hospital_km,float64,Simulated distance in km; not routing or actual facility data.,candidate_predictor
+nearest_evac_km,float64,Simulated evacuation-site distance in km; not an actual shelter location.,candidate_predictor
+flood_risk_score,float64,"Uncalibrated generator propensity * 100 BEFORE balancing, not operational probability; exclude.",exclude_or_metadata
+flood_occurrence_current_event,object,"PRIMARY TARGET: stochastic simulated flooding, Yes/No; no observed labels.",target
+inundation_area_sqm,float64,Post-outcome simulated flooded area within hypothetical 10000 m2 site; exclude.,exclude_or_metadata
+is_good_to_live,object,Legacy deterministic synthetic screening proxy; NOT residential safety advice; NOT balanced.,exclude_or_metadata
+reason_not_good_to_live,object,Explanation of legacy proxy; Not applicable when proxy is Yes; exclude.,exclude_or_metadata
+is_synthetic,bool,Always True for every record.,exclude_or_metadata
+generation_date,object,"Fixed artifact generation date, 2026-09-18; not an observation date.",exclude_or_metadata
+scenario_date,object,"Invented simulation date in 2026-08-01 to 2026-08-07, not verified event duration.",exclude_or_metadata
+event_context_id,object,Broad contextual event tag; not proof this site or district flooded.,exclude_or_metadata
+record_type,object,Always synthetic_site_scenario.,exclude_or_metadata
+coordinate_type,object,"Explicitly states coordinates are district reference anchors, not site geolocation.",exclude_or_metadata
+rainfall_24h_mm,float64,Simulated trailing 24-hour rainfall including scenario day.,candidate_predictor
+rainfall_30d_mm,float64,Simulated trailing 30-day rainfall including scenario day.,candidate_predictor
+height_above_nearest_drainage_m,float64,Assumed local relative terrain height (m); NOT measured HAND raster.,candidate_predictor
+soil_saturation_index,float64,Assumed antecedent wetness 0–1.,candidate_predictor
+flood_depth_m,float64,"Post-outcome simulated depth (m), zero for non-flooded; exclude.",exclude_or_metadata
+site_area_sqm,int64,Hypothetical site area 10000 m2; sites are not a tessellated spatial grid.,exclude_or_metadata
+source_context_id,object,"S1 identifies news context ONLY, not row-level measurement source.",exclude_or_metadata
+generator_version,object,Generator version 1.0.,exclude_or_metadata
+random_seed,int64,Fixed NumPy RNG seed for reproducibility.,exclude_or_metadata
+split,object,"Preassigned stratified train/validation/test, 70/15/15; not independent event or spatial holdout.",exclude_or_metadata
