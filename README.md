@@ -6,6 +6,23 @@ A production-grade meteorological monitoring and flood risk classification syste
 
 ---
 
+## 👥 Project Team & Academic Information
+
+- **Module:** ITS-2140 – Machine Learning
+- **Batch:** GDSE-071 (Panadura Branch)
+- **Team Name:** Vanguard
+
+### Group Members
+
+| Student ID | Student Name | GitHub | Contribution Focus |
+| :---: | :--- | :---: | :--- |
+| `241711007` | **Gamitha Gimhana Jayasanka** | [@GamithaGimhana](https://github.com/GamithaGimhana) | Frontend Geospatial Map & Full ML Lifecycle |
+| `241711098` | **Ushan Gimhan** | [@ushan-Gimhan](https://github.com/ushan-Gimhan) | Backend REST API, Inference Engine & DevOps |
+| `241711093` | **Buddhika Aloka Fernando** | [@Alokafernando](https://github.com/Alokafernando) | Live Weather Ingestion, Radar & Emergency Overpass APIs |
+| `241711043` | **Oshadha Sankalpa Thambavita** | [@OshadhaThambavita](https://github.com/OshadhaThambavita) | ML Dataset Synthesis & Calibration Analysis |
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -80,7 +97,7 @@ This validates the dataset checksum, trains a HistGradientBoosting pipeline with
 
 - **Classifier:** `HistGradientBoostingClassifier` (max_iter=160, max_leaf_nodes=15, L2=10)
 - **Calibration:** Isotonic Regression on 9,000 validation rows
-- **Decision threshold:** `0.165` (F2-optimal on 9,000 threshold-selection rows)
+- **Decision threshold:** `0.1216` (F2-optimal on 9,000 threshold-selection rows)
 - **Feature pipeline:** Shared `FeatureBuilder` + `OrdinalEncoder` for categoricals
 
 ### Hold-Out Test Set Performance (18,000 records)
@@ -90,12 +107,12 @@ This validates the dataset checksum, trains a HistGradientBoosting pipeline with
 | **ROC-AUC** | 0.7923 |
 | **Average Precision** | 0.7804 (baseline: 0.50) |
 | **Brier Score** | 0.1859 |
-| **Recall (flood)** | 97.96% |
-| **Precision** | 54.63% |
-| **F1-Score** | 0.7014 |
-| **False Negatives** | 184 / 9,000 |
+| **Recall (flood)** | 98.24% |
+| **Precision** | 54.23% |
+| **F1-Score** | 0.6988 |
+| **False Negatives** | 158 / 9,000 |
 
-> The F2-tuned threshold prioritizes recall (catching floods) at the cost of precision. 97.96% of synthetic floods are detected; real-world performance requires validation on observed events.
+> The F2-tuned threshold prioritizes recall (catching floods) at the cost of precision. 98.24% of synthetic floods are detected; real-world performance requires validation on observed events.
 
 ---
 
