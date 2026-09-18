@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import math
+import sqlite3
 from datetime import datetime, timezone, timedelta
 from typing import Dict
 import httpx
@@ -11,7 +12,11 @@ from app.data.districts_geo import SRI_LANKA_DISTRICTS
 from app.models.weather import (LiveWeatherResponse, CurrentWeather, DailyWeather, SoilMetrics,
                                 DistrictTelemetry, DistrictsWeatherResponse)
 from app.services.ml_service import ml_service, ModelUnavailable
-from app.services.scenario import validated_baseline, ASSUMPTIONS
+from app.services.scenario import validated_baseline, ASSUMPTIONS, input_sources
+from app.services.history_service import history_service
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 logger = logging.getLogger(__name__)
 WMO_CODE_MAP: Dict[int, str] = {
@@ -79,7 +84,7 @@ class WeatherService:
                         "latitude": lat, "longitude": lon,
                         "current": "temperature_2m,precipitation,weather_code,wind_speed_10m",
                         "daily": "precipitation_sum", "hourly": "soil_moisture_0_to_7cm",
-                        "timezone": "Asia/Colombo", "past_days": 7, "forecast_days": 1,
+                        "timezone": "Asia/Colombo", "past_days": 30, "forecast_days": 8,
                     })
                     response.raise_for_status()
                 result = self._parse(response.json(), lat, lon)
@@ -96,6 +101,9 @@ class WeatherService:
     def _parse(self, data, lat, lon):
         current = data["current"]
         observed = datetime.fromisoformat(current["time"])
+        age = utc_now() - observed.replace(tzinfo=timezone(timedelta(hours=5, minutes=30)))
+        if age > timedelta(hours=2) or age < -timedelta(minutes=30):
+            raise ValueError('Provider timestamp is stale or in the future')
         def number(value):
             value = float(value)
             if not math.isfinite(value):
@@ -104,7 +112,11 @@ class WeatherService:
         daily = data["daily"]
         pairs = dict(zip(daily["time"], daily["precipitation_sum"], strict=True))
         dates = [(observed.date() - timedelta(days=i)).isoformat() for i in range(7, 0, -1)]
-        rainfall = [number(pairs[day]) for day in dates]
+        past_dates = [(observed.date() - timedelta(days=i)).isoformat() for i in range(30, 0, -1)]
+        past_rain = [number(pairs[day]) for day in past_dates]
+        if any(v < 0 for v in past_rain):
+            raise ValueError('Negative rainfall')
+        rainfall = past_rain[-7:]
         if any(v < 0 for v in rainfall):
             raise ValueError("Negative rainfall")
         hourly = data["hourly"]
@@ -122,6 +134,22 @@ class WeatherService:
         interval = number(current["interval"])
         if interval <= 0:
             raise ValueError("Invalid observation interval")
+        forecast = []
+        try:
+            all_rain = {day: number(value) for day, value in pairs.items()}
+            for horizon in range(1, 8):
+                day = observed.date() + timedelta(days=horizon)
+                window = [all_rain[(day - timedelta(days=i)).isoformat()] for i in range(29, -1, -1)]
+                if any(v < 0 for v in window):
+                    raise ValueError('Negative forecast rain')
+                future_soil = [number(v) for t, v in zip(hourly['time'], hourly['soil_moisture_0_to_7cm'], strict=True)
+                               if datetime.fromisoformat(t).date() == day and v is not None]
+                if len(future_soil) != 24 or any(not 0 <= v <= 1 for v in future_soil):
+                    raise ValueError('Incomplete forecast soil day')
+                forecast.append(dict(date=day.isoformat(), rainfall_24h_mm=window[-1], rainfall_7d_mm=sum(window[-7:]),
+                                     rainfall_30d_mm=sum(window), soil_saturation_index=self._calc_soil_saturation(sum(future_soil) / 24) / 100))
+        except (ValueError, KeyError, TypeError):
+            forecast = []
         return LiveWeatherResponse(
             latitude=lat, longitude=lon,
             elevation_m=number(data["elevation"]) if data.get("elevation") is not None else None,
@@ -130,7 +158,8 @@ class WeatherService:
                 wind_speed_10m=number(current["wind_speed_10m"]) if current.get("wind_speed_10m") is not None else None,
                 weather_code=int(current["weather_code"]), condition_text=self._decode_wmo(int(current["weather_code"])),
                 time=observed.replace(tzinfo=timezone(timedelta(hours=5, minutes=30))).isoformat()),
-            daily=DailyWeather(precipitation_sum_7d=round(sum(rainfall), 1), max_daily_rainfall=max(rainfall),
+            forecast=forecast, forecast_status="available" if forecast else "unavailable",
+            daily=DailyWeather(precipitation_sum_24h=past_rain[-1], precipitation_sum_30d=sum(past_rain), precipitation_sum_7d=sum(rainfall), max_daily_rainfall=max(rainfall),
                                dates=dates, rain_values=rainfall),
             soil=SoilMetrics(soil_moisture_surface=moisture, saturation_pct=self._calc_soil_saturation(moisture)),
             cached_at=datetime.now(timezone.utc).isoformat())
@@ -138,18 +167,19 @@ class WeatherService:
     async def fetch_district_weather(self, district):
         weather = await self.fetch_live_weather(district["lat"], district["lon"])
         prediction = None
+        raw = {}
         assumptions = list(ASSUMPTIONS)
         if weather.status == "live":
             try:
                 raw = validated_baseline(district,
                     rainfall_7d_mm=weather.daily.precipitation_sum_7d,
-                    monthly_rainfall_mm=weather.daily.precipitation_sum_7d * 3.5,
-                    drainage_index=max(.01, 1 - weather.soil.saturation_pct / 100),
-                    ndwi=.15 + weather.soil.saturation_pct * .005)
+                    rainfall_24h_mm=weather.daily.precipitation_sum_24h,
+                    rainfall_30d_mm=weather.daily.precipitation_sum_30d,
+                    soil_saturation_index=weather.soil.saturation_pct / 100)
                 prediction = await run_in_threadpool(ml_service.evaluate, raw)
             except (ModelUnavailable, ValueError):
                 assumptions.append('Model assessment unavailable; weather remains available.')
-        return DistrictTelemetry(id=district["id"], name=district["name"], province=district["province"],
+        telemetry = DistrictTelemetry(id=district["id"], name=district["name"], province=district["province"],
             latitude=district["lat"], longitude=district["lon"], status=weather.status,
             current_temp=weather.current.temperature_2m if weather.current else None,
             current_rain_mm=weather.current.precipitation if weather.current else None,
@@ -157,7 +187,16 @@ class WeatherService:
             soil_saturation_pct=weather.soil.saturation_pct if weather.soil else None,
             risk_tier=prediction.alert_level if prediction else None,
             risk_score=prediction.risk_score if prediction else None,
-            prediction=prediction, observed_at=weather.current.time if weather.current else None, assumptions=assumptions)
+            prediction=prediction, observed_at=weather.current.time if weather.current else None, assumptions=assumptions,
+            assessment_inputs=raw, input_sources=input_sources(raw) if raw else {})
+        if prediction:
+            try:
+                await run_in_threadpool(history_service.record, telemetry)
+                telemetry.history_status = 'recorded'
+            except (OSError, sqlite3.Error):
+                logger.exception('Assessment history could not be saved')
+                telemetry.history_status = 'unavailable'
+        return telemetry
 
     async def fetch_districts_weather(self):
         results = await asyncio.gather(*(self.fetch_district_weather(d) for d in SRI_LANKA_DISTRICTS))

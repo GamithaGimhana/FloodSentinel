@@ -17,11 +17,13 @@ def test_live_assessment_is_auditable_and_deduplicated(client):
     assert saved['inputs'] == first['assessment_inputs']
     assert saved['prediction'] == first['prediction']
     assert saved['observed_at'] == first['observed_at']
-    assert len(saved['input_sources']) == 23
-    assert saved['input_sources']['distance_to_river_m'] == 'Demonstration baseline'
+    assert len(saved['input_sources']) == 21
+    assert saved['input_sources']['distance_to_river_m'] == 'Unverified scenario baseline'
     # An unmodified scenario must reproduce the selected district, not Colombo defaults.
     result = client.post('/api/v1/simulate', json={
         'district': 'kalutara', 'rainfall_7d_mm': first['rain_7d_mm'],
+        'rainfall_24h_mm': first['assessment_inputs']['rainfall_24h_mm'],
+        'rainfall_30d_mm': first['assessment_inputs']['rainfall_30d_mm'],
         'soil_saturation_pct': first['soil_saturation_pct'],
         'elevation_m': first['assessment_inputs']['elevation_m'],
         'distance_to_river_m': first['assessment_inputs']['distance_to_river_m'],
@@ -64,4 +66,4 @@ def test_empty_and_unavailable_assessments_do_not_invent_history(client, monkeyp
 
 
 def test_extreme_scenario_reports_invalid_derived_rainfall(client):
-    assert client.post('/api/v1/simulate', json={'rainfall_7d_mm': 5000}).status_code == 422
+    assert client.post('/api/v1/simulate', json={'rainfall_7d_mm': 5000, 'rainfall_30d_mm': 4000}).status_code == 422
