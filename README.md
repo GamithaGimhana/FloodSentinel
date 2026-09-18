@@ -2,6 +2,10 @@
 
 A production-grade meteorological monitoring and flood risk classification system for Sri Lanka's 25 administrative districts. Combines live weather ingestion, calibrated machine learning inference, and seven-day scenario projections in a unified React + FastAPI application.
 
+🔗 **Live Application:** [https://floodsentinel-207370591616.asia-south1.run.app](https://floodsentinel-207370591616.asia-south1.run.app)  
+📖 **API Documentation (Swagger UI):** [https://floodsentinel-207370591616.asia-south1.run.app/docs](https://floodsentinel-207370591616.asia-south1.run.app/docs)  
+🩺 **System Health Check:** [https://floodsentinel-207370591616.asia-south1.run.app/health](https://floodsentinel-207370591616.asia-south1.run.app/health)
+
 > **Disclaimer:** The model is trained on synthetic balanced scenarios, not verified disaster observations. Scores are calibrated on the synthetic distribution and do not represent real-world flood probability. This is not an official early-warning system.
 
 ---
@@ -42,6 +46,20 @@ npm ci --prefix frontend
 # Start both services
 python scripts/dev.py
 # Dashboard: http://127.0.0.1:5173  |  API docs: http://127.0.0.1:8000/docs
+```
+
+### ☁️ Cloud Deployment (Google Cloud Run)
+
+FloodSentinel is live on **Google Cloud Run** (Mumbai `asia-south1` region):
+
+- **Live Application:** [https://floodsentinel-207370591616.asia-south1.run.app](https://floodsentinel-207370591616.asia-south1.run.app)
+- **API Documentation:** [https://floodsentinel-207370591616.asia-south1.run.app/docs](https://floodsentinel-207370591616.asia-south1.run.app/docs)
+
+To redeploy or publish code updates:
+
+```powershell
+# Automated one-click deployment
+.\scripts\deploy_gcp.ps1
 ```
 
 ### Retrain the Model

@@ -56,16 +56,35 @@ app.add_middleware(
 )
 
 
-from fastapi.responses import RedirectResponse
+import os
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, FileResponse
+
+FRONTEND_DIST = os.getenv("FRONTEND_DIST", "")
+if not FRONTEND_DIST:
+    candidate_paths = [
+        Path("/app/frontend_dist"),
+        Path(__file__).resolve().parents[2] / "frontend_dist",
+        Path(__file__).resolve().parents[2] / "frontend" / "dist",
+    ]
+    for p in candidate_paths:
+        if p.is_dir() and (p / "index.html").is_file():
+            FRONTEND_DIST = str(p)
+            break
 
 
 @app.get(
     "/",
     include_in_schema=False,
     summary="Root Endpoint",
-    description="Redirects to interactive Swagger API documentation."
+    description="Serves the FloodSentinel dashboard or redirects to Swagger docs."
 )
 async def root():
+    if FRONTEND_DIST:
+        index_file = os.path.join(FRONTEND_DIST, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
     return RedirectResponse(url="/docs")
 
 
@@ -139,6 +158,24 @@ async def validation_error_handler(request, exc):
         {'loc': list(error['loc']), 'msg': error['msg'], 'type': error['type']}
         for error in exc.errors()
     ]})
+
+
+# Mount assets and SPA fallback if frontend distribution is present
+if FRONTEND_DIST and os.path.isdir(FRONTEND_DIST):
+    assets_dir = os.path.join(FRONTEND_DIST, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_frontend_spa(full_path: str):
+        if full_path:
+            target = os.path.join(FRONTEND_DIST, full_path)
+            if os.path.isfile(target):
+                return FileResponse(target)
+        index_file = os.path.join(FRONTEND_DIST, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
+        return RedirectResponse(url="/docs")
 
 
 if __name__ == "__main__":
