@@ -5,8 +5,6 @@ This branch contains the emergency response features, evacuation routing engine,
 ---
 
 ## 🎯 Branch Purpose
-Primary Owner: **Member 4** (Backend Architect, Evacuation & DevOps Lead)
-
 Responsible for calculating nearest safe zones and hospitals, rendering circular risk gauges, managing Docker Compose orchestration, and coordinating testing and final academic reporting.
 
 ---
