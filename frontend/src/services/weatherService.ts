@@ -14,7 +14,17 @@ export interface Telemetry {
   id: string; status: 'live' | 'unavailable'; current_temp: number | null; rain_7d_mm: number | null;
   risk_tier: Prediction['alert_level'] | null; risk_score: number | null;
   prediction: Prediction | null; observed_at: string | null; assumptions: string[];
+  soil_saturation_pct: number | null;
+  assessment_inputs: Record<string, string | number>;
+  input_sources: Record<string, string>;
+  history_status: 'recorded' | 'unavailable' | 'not_recorded';
 }
+export interface HistoryEntry {
+  observed_at: string; recorded_at: string; prediction: Prediction;
+  inputs: Record<string, string | number>; input_sources: Record<string, string>;
+  rain_7d_mm: number; soil_saturation_pct: number;
+}
+export interface AssessmentHistory { district: string; entries: HistoryEntry[]; notice: string }
 export interface DistrictSnapshot { generated_at: string; districts: Telemetry[] }
 export interface Health { status: string; model_available: boolean; ml_model_type: string }
 export interface RadarFrame { time: number; path: string; tile_url_template: string; kind: 'observed' | 'forecast' }
