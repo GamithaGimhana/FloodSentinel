@@ -1,13 +1,13 @@
 # 🌦️ Live Weather, Radar & Emergency Facilities Service Branch (`feature/weather-service`)
 
-This branch contains the real-time meteorological ingestion, Doppler radar frame manager, and emergency facility lookup service for **FloodSentinel**.
+This branch contains the real-time meteorological ingestion, Doppler radar frame manager, emergency facility lookup, and persistent assessment history service for **FloodSentinel**.
 
 ---
 
 ## 🎯 Branch Purpose
 Primary Owner: **Member 1** (Data Engineering & Weather Service Lead)
 
-Responsible for integrating live, open meteorological APIs (Open-Meteo) and Doppler radar feeds (RainViewer) with resilient in-memory caching and request deduplication, as well as providing nearby emergency shelters and hospital discovery via the OpenStreetMap Overpass API.
+Responsible for integrating live, open meteorological APIs (Open-Meteo) and Doppler radar feeds (RainViewer) with resilient in-memory caching and request deduplication, providing nearby emergency shelters and hospital discovery via the OpenStreetMap Overpass API, and maintaining an auditable, persistent district assessment history database.
 
 ---
 
@@ -33,10 +33,19 @@ Responsible for integrating live, open meteorological APIs (Open-Meteo) and Dopp
 
 ---
 
+## 💾 Persistent District Assessment History Service
+- **Storage Engine**: SQLite (`runtime/assessments.sqlite3`), configurable via `HISTORY_DB_PATH`.
+- **Deduplication**: Hashes observation payloads to avoid duplicate records on rapid re-queries.
+- **Retention**: Strictly bounded to the latest 288 records per district (FIFO cleanup).
+- **Graceful Degradation**: Storage failures leave live weather and inference functional while returning explicit HTTP 503 status for history queries.
+
+---
+
 ## 🔌 API Endpoints Exposed
 
 - `GET /api/v1/weather/live?lat={lat}&lon={lon}` - Real-time point weather estimates.
 - `GET /api/v1/weather/districts` - Baseline weather telemetry across all 25 Sri Lankan districts.
 - `GET /api/v1/weather/districts/{district_id}` - Weather telemetry for a specific district.
+- `GET /api/v1/weather/districts/{district_id}/history?limit={limit}` - Chronological assessment history (limit: 1–288 records).
 - `GET /api/v1/radar/frames` - Timestamped Doppler radar tile frames and playback intervals.
 - `GET /api/v1/emergency/nearby?lat={lat}&lon={lon}&radius_km={radius}` - Nearby hospitals and emergency shelters.

@@ -14,6 +14,22 @@ from app.services.radar_service import radar_service
 router = APIRouter()
 
 
+@router.get('/weather/districts/{district_id}/history')
+def district_history(district_id: str, limit: int = Query(48, ge=1, le=288)):
+    import sqlite3
+    from app.data.districts_geo import SRI_LANKA_DISTRICTS
+    from app.services.history_service import history_service
+    target = district_id.strip().lower().replace('_', '-')
+    if not any(d['id'] == target for d in SRI_LANKA_DISTRICTS):
+        raise HTTPException(404, 'District not found')
+    try:
+        entries = history_service.read(target, limit)
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(503, 'Assessment history is unavailable; current assessments may still work.') from exc
+    return {'district': target, 'entries': entries, 'retention_limit': history_service.limit,
+            'notice': 'Recorded when district assessments are requested. Gaps are not interpolated; no background monitoring.'}
+
+
 @router.get(
     "/weather/live",
     response_model=LiveWeatherResponse,
