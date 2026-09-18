@@ -2,6 +2,11 @@
 
 A production-grade meteorological monitoring and flood risk classification system for Sri Lanka's 25 administrative districts. Combines live weather ingestion, calibrated machine learning inference, and seven-day scenario projections in a unified React + FastAPI application.
 
+🔗 **Live Application:** [https://floodsentinel-207370591616.asia-south1.run.app](https://floodsentinel-207370591616.asia-south1.run.app)  
+📖 **API Documentation (Swagger UI):** [https://floodsentinel-207370591616.asia-south1.run.app/docs](https://floodsentinel-207370591616.asia-south1.run.app/docs)  
+🩺 **System Health Check:** [https://floodsentinel-207370591616.asia-south1.run.app/health](https://floodsentinel-207370591616.asia-south1.run.app/health)  
+📊 **Kaggle Dataset:** [Sri Lanka Flood Synthetic Dataset (Balanced 120k)](https://www.kaggle.com/datasets/gamithagimhana/sri-lanka-flood-synthetic-dataset-balanced-120k)
+
 > **Disclaimer:** The model is trained on synthetic balanced scenarios, not verified disaster observations. Scores are calibrated on the synthetic distribution and do not represent real-world flood probability. This is not an official early-warning system.
 
 ---
@@ -44,6 +49,20 @@ python scripts/dev.py
 # Dashboard: http://127.0.0.1:5173  |  API docs: http://127.0.0.1:8000/docs
 ```
 
+### ☁️ Cloud Deployment (Google Cloud Run)
+
+FloodSentinel is live on **Google Cloud Run** (Mumbai `asia-south1` region):
+
+- **Live Application:** [https://floodsentinel-207370591616.asia-south1.run.app](https://floodsentinel-207370591616.asia-south1.run.app)
+- **API Documentation:** [https://floodsentinel-207370591616.asia-south1.run.app/docs](https://floodsentinel-207370591616.asia-south1.run.app/docs)
+
+To redeploy or publish code updates:
+
+```powershell
+# Automated one-click deployment
+.\scripts\deploy_gcp.ps1
+```
+
 ### Retrain the Model
 
 The model is shipped pre-trained. To reproduce from the balanced dataset:
@@ -62,7 +81,7 @@ This validates the dataset checksum, trains a HistGradientBoosting pipeline with
 
 | Property | Value |
 |---|---|
-| **Source** | `assets/sri_lanka_flood_synthetic_balanced_120000.csv` |
+| **Source** | [Kaggle: Sri Lanka Flood Synthetic Dataset (Balanced 120k)](https://www.kaggle.com/datasets/gamithagimhana/sri-lanka-flood-synthetic-dataset-balanced-120k) (`assets/sri_lanka_flood_synthetic_balanced_120000.csv`) |
 | **Records** | 120,000 synthetic site scenarios |
 | **Class balance** | 50% flood / 50% no-flood (60,000 each) |
 | **Districts** | 25 (4,800 per district, 2,400 per class) |
