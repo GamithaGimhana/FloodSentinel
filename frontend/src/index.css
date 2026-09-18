@@ -21,6 +21,34 @@
 @media(max-width:500px) { .input-grid { grid-template-columns:1fr } }
 
 /* Keep secondary content readable and the expanded navigation usable on phones. */
+.assessment-headline { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:26px; margin-bottom:22px; border:1px solid #c7ded2; border-radius:12px; background:linear-gradient(120deg,#e6f2ec,#f8fbf9) }
+.assessment-headline h2 { font-size:23px; line-height:1.3; max-width:750px; color:#244c3e }
+.assessment-headline p { font-size:12px; line-height:1.7; margin-top:12px; max-width:770px; color:#526c60 }
+.assessment-facts { display:flex; flex-wrap:wrap; gap:10px 20px; margin-top:16px; font-size:10px; color:#49685a }
+.assessment-facts span { display:flex; align-items:center; gap:6px }
+.assessment-facts .stale-reading { color:#9a551d; font-weight:600 }
+.insights-grid { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:20px; margin-top:20px }
+.insights-grid h2 { margin-bottom:10px }
+.history-summary { display:flex; gap:16px; align-items:center; padding:20px 0 }
+.history-summary strong { font-size:23px; color:#244c3e; white-space:nowrap }
+.history-summary span { color:#526c60; font-size:11px; line-height:1.6 }
+.history-chart { width:100%; display:block; margin:5px 0 }
+.history-axis { display:flex; justify-content:space-between; font-size:10px; color:#526c60; gap:12px }
+.change-context { margin-top:22px; border-top:1px solid var(--line); padding-top:18px }
+.change-context ul { padding-left:18px; font-size:11px; line-height:1.9; color:#526c60; overflow-wrap:anywhere }
+.source-details { margin-top:20px }
+.source-details summary { cursor:pointer; padding:12px 0; font-size:12px; color:#1c7058; font-weight:550 }
+.provenance-list { margin:20px 0 }
+.provenance-list>div { display:flex; flex-direction:column; gap:6px; padding:13px 0; border-bottom:1px solid var(--line) }
+.provenance-list strong { font-size:12px; color:#365749 }
+.provenance-list span { font-size:11px; color:#526c60; line-height:1.6 }
+.scenario-comparison { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:24px; padding:20px; background:#edf5f0; border-radius:9px; color:#365749 }
+.scenario-comparison span { display:block; font-size:11px; margin-bottom:8px }
+.scenario-comparison strong { font-size:25px }
+.risk-result-row { flex-wrap:wrap }
+.risk-badge { white-space:normal; line-height:1.5 }
+@media(max-width:1100px) { .assessment-headline { flex-direction:column; align-items:flex-start } .insights-grid { grid-template-columns:1fr } }
+@media(max-width:760px) { .assessment-headline { padding:20px } .assessment-headline h2 { font-size:20px } .history-summary { flex-wrap:wrap } }
 .muted,.fine-print,.field-label,.scenario-field p,.page-heading p { color:#5e726a }
 .eyebrow { color:#587367 }
 .sidebar { overflow-y:auto }

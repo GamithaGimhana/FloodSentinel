@@ -3,10 +3,7 @@ import { Bookmark, Check, Trash2, ArrowUpRight } from 'lucide-react';
 import { SRI_LANKA_DISTRICTS } from '../data/sriLankaDistricts';
 import { type DistrictSnapshot } from '../services/weatherService';
 import { RiskBadge } from '../components/common/Status';
-const KEY = 'floodsentinel_saved_districts_v1';
-export function readSavedPlaces(): string[] {
-  try { const data: unknown = JSON.parse(localStorage.getItem(KEY) ?? '[]'); return Array.isArray(data) ? [...new Set(data.filter((x): x is string => typeof x === 'string' && SRI_LANKA_DISTRICTS.some(d => d.id === x)))].slice(0, 25) : []; } catch { return []; }
-}
+import { KEY, readSavedPlaces } from '../services/watchlist';
 export default function RegistrationView({ snapshot, onNavigateToMap }: { snapshot: DistrictSnapshot | null; onNavigateToMap: (id: string) => void }) {
   const [saved, setSaved] = useState(readSavedPlaces); const [district, setDistrict] = useState('colombo'); const [message, setMessage] = useState('');
   const persist = (next: string[]) => { try { localStorage.setItem(KEY, JSON.stringify(next)); setSaved(next); setMessage('Saved on this browser.'); } catch { setMessage('Browser storage is unavailable. Your selection could not be saved.'); } };

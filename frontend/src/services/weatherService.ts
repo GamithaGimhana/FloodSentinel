@@ -1,6 +1,6 @@
 export interface Prediction {
   flood_probability: number; risk_score: number; alert_level: 'SAFE' | 'ADVISORY' | 'WARNING' | 'CRITICAL';
-  model_type: 'pipeline'; model_version: string; data_scope: string; tier_policy: string; threshold_used: number; binary_prediction: number;
+  model_type: 'pipeline'; model_version: string; data_scope: string; tier_policy: string; input_warnings?: string[]; threshold_used: number; binary_prediction: number;
   recommended_action: string; engineered_features: Record<string, number>; assumptions?: string[];
 }
 export interface Weather {
@@ -29,7 +29,7 @@ export interface DistrictSnapshot { generated_at: string; districts: Telemetry[]
 export interface Health { status: string; model_available: boolean; ml_model_type: string }
 export interface RadarFrame { time: number; path: string; tile_url_template: string; kind: 'observed' | 'forecast' }
 export interface Radar { status: 'live' | 'unavailable'; frames: RadarFrame[]; latest_frame: RadarFrame | null }
-export interface Scenario { rainfall_7d_mm: number; elevation_m: number; distance_to_river_m: number; soil_saturation_pct: number; district: string }
+export interface Scenario { rainfall_24h_mm: number; rainfall_30d_mm: number; height_above_nearest_drainage_m: number; drainage_index: number; rainfall_7d_mm: number; elevation_m: number; distance_to_river_m: number; soil_saturation_pct: number; district: string }
 const BASE = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const controller = new AbortController();

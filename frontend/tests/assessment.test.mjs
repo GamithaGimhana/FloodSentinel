@@ -6,7 +6,7 @@ test('scenario uses selected district weather and terrain without rounding', () 
   const district = { id: 'kalutara', elevation: 12 };
   const reading = { rain_7d_mm: 321.7, soil_saturation_pct: 83.6, assessment_inputs: { elevation_m: 18, distance_to_river_m: 450 } };
   assert.deepEqual(scenarioFromDistrict(district, reading), {
-    district: 'kalutara', rainfall_7d_mm: 321.7, soil_saturation_pct: 83.6, elevation_m: 18, distance_to_river_m: 450,
+    district: 'kalutara', rainfall_7d_mm: 321.7, rainfall_24h_mm: 321.7 / 7, rainfall_30d_mm: 321.7, height_above_nearest_drainage_m: 5, drainage_index: .5, soil_saturation_pct: 83.6, elevation_m: 18, distance_to_river_m: 450,
   });
 });
 
