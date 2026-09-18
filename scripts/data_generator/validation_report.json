@@ -1,0 +1,245 @@
+{
+  "rows": 120000,
+  "columns": 46,
+  "seed": 20260918,
+  "target": "flood_occurrence_current_event",
+  "class_counts": {
+    "Yes": 60000,
+    "No": 60000
+  },
+  "district_counts": {
+    "Anuradhapura": 4800,
+    "Kandy": 4800,
+    "Matara": 4800,
+    "Vavuniya": 4800,
+    "Kegalle": 4800,
+    "Gampaha": 4800,
+    "Ampara": 4800,
+    "Matale": 4800,
+    "Mannar": 4800,
+    "Colombo": 4800,
+    "Badulla": 4800,
+    "Mullaitivu": 4800,
+    "Batticaloa": 4800,
+    "Kalutara": 4800,
+    "Ratnapura": 4800,
+    "Hambantota": 4800,
+    "Jaffna": 4800,
+    "Trincomalee": 4800,
+    "Kurunegala": 4800,
+    "Polonnaruwa": 4800,
+    "Galle": 4800,
+    "Monaragala": 4800,
+    "Puttalam": 4800,
+    "Kilinochchi": 4800,
+    "Nuwara Eliya": 4800
+  },
+  "split_counts": {
+    "test": {
+      "No": 9000,
+      "Yes": 9000
+    },
+    "train": {
+      "No": 42000,
+      "Yes": 42000
+    },
+    "validation": {
+      "No": 9000,
+      "Yes": 9000
+    }
+  },
+  "secondary_target_counts_NOT_balanced": {
+    "No": 81432,
+    "Yes": 38568
+  },
+  "candidate_counts_before_balancing": [
+    {
+      "district": "Ampara",
+      "candidates": 24000,
+      "flooded": 4181
+    },
+    {
+      "district": "Anuradhapura",
+      "candidates": 24000,
+      "flooded": 3553
+    },
+    {
+      "district": "Badulla",
+      "candidates": 24000,
+      "flooded": 6203
+    },
+    {
+      "district": "Batticaloa",
+      "candidates": 24000,
+      "flooded": 4448
+    },
+    {
+      "district": "Colombo",
+      "candidates": 24000,
+      "flooded": 7476
+    },
+    {
+      "district": "Galle",
+      "candidates": 24000,
+      "flooded": 7040
+    },
+    {
+      "district": "Gampaha",
+      "candidates": 24000,
+      "flooded": 6915
+    },
+    {
+      "district": "Hambantota",
+      "candidates": 24000,
+      "flooded": 3940
+    },
+    {
+      "district": "Jaffna",
+      "candidates": 24000,
+      "flooded": 3114
+    },
+    {
+      "district": "Kalutara",
+      "candidates": 24000,
+      "flooded": 7779
+    },
+    {
+      "district": "Kandy",
+      "candidates": 24000,
+      "flooded": 6781
+    },
+    {
+      "district": "Kegalle",
+      "candidates": 24000,
+      "flooded": 7773
+    },
+    {
+      "district": "Kilinochchi",
+      "candidates": 24000,
+      "flooded": 3381
+    },
+    {
+      "district": "Kurunegala",
+      "candidates": 24000,
+      "flooded": 5430
+    },
+    {
+      "district": "Mannar",
+      "candidates": 24000,
+      "flooded": 3051
+    },
+    {
+      "district": "Matale",
+      "candidates": 24000,
+      "flooded": 6031
+    },
+    {
+      "district": "Matara",
+      "candidates": 24000,
+      "flooded": 7386
+    },
+    {
+      "district": "Monaragala",
+      "candidates": 24000,
+      "flooded": 4515
+    },
+    {
+      "district": "Mullaitivu",
+      "candidates": 24000,
+      "flooded": 3623
+    },
+    {
+      "district": "Nuwara Eliya",
+      "candidates": 24000,
+      "flooded": 7227
+    },
+    {
+      "district": "Polonnaruwa",
+      "candidates": 24000,
+      "flooded": 3886
+    },
+    {
+      "district": "Puttalam",
+      "candidates": 24000,
+      "flooded": 4446
+    },
+    {
+      "district": "Ratnapura",
+      "candidates": 24000,
+      "flooded": 8463
+    },
+    {
+      "district": "Trincomalee",
+      "candidates": 24000,
+      "flooded": 3888
+    },
+    {
+      "district": "Vavuniya",
+      "candidates": 24000,
+      "flooded": 3633
+    }
+  ],
+  "recommended_predictors": [
+    "district",
+    "elevation_m",
+    "distance_to_river_m",
+    "landcover",
+    "soil_type",
+    "water_supply",
+    "electricity",
+    "road_quality",
+    "population_density_per_km2",
+    "built_up_percent",
+    "urban_rural",
+    "rainfall_7d_mm",
+    "drainage_index",
+    "historical_flood_count",
+    "infrastructure_score",
+    "nearest_hospital_km",
+    "nearest_evac_km",
+    "rainfall_24h_mm",
+    "rainfall_30d_mm",
+    "height_above_nearest_drainage_m",
+    "soil_saturation_index"
+  ],
+  "excluded_from_predictors": [
+    "record_id",
+    "place_name",
+    "latitude",
+    "longitude",
+    "ndvi",
+    "ndwi",
+    "water_presence_flag",
+    "flood_risk_score",
+    "flood_occurrence_current_event",
+    "inundation_area_sqm",
+    "is_good_to_live",
+    "reason_not_good_to_live",
+    "is_synthetic",
+    "generation_date",
+    "scenario_date",
+    "event_context_id",
+    "record_type",
+    "coordinate_type",
+    "monthly_rainfall_mm",
+    "flood_depth_m",
+    "site_area_sqm",
+    "source_context_id",
+    "generator_version",
+    "random_seed",
+    "split"
+  ],
+  "checks_passed": [
+    "unique IDs",
+    "120000 rows",
+    "exact target balance per district",
+    "rainfall ordering",
+    "positive depth and area iff flooded",
+    "area <= site area",
+    "no empty fields",
+    "no duplicate scenarios excluding IDs",
+    "all synthetic",
+    "disjoint site IDs across splits"
+  ],
+  "sha256": "9543f6e551e1b63b9c93934bf4f5236bd063648805bdac12b901d43fb2b1c8bf"
+}

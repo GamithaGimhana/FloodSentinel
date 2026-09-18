@@ -1,0 +1,16 @@
+{
+    "model_name": "FloodSentinel-EarlyWarning",
+    "version": "2.0.0-balanced",
+    "architecture": "HistGradientBoosting + Isotonic Calibration + F2 Threshold",
+    "decision_threshold": 0.12163454623519629,
+    "data_scope": "120,000 balanced synthetic scenarios",
+    "training_rows": 84000,
+    "validation_rows": 18000,
+    "test_rows": 18000,
+    "test_metrics": {
+        "recall": 0.9824,
+        "precision": 0.5423,
+        "f1": 0.6988,
+        "disaster_cost": 9044.0
+    }
+}
