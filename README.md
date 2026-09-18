@@ -1,129 +1,51 @@
-# 🌊 FloodSentinel - Sri Lanka Flood Early Warning & Real-Time Radar System
+# 🌦️ Live Weather, Radar & Emergency Facilities Service Branch (`feature/weather-service`)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/Frontend-React%20%2F%20Vite-61DAFB.svg)](https://vitejs.dev/)
-[![Leaflet](https://img.shields.io/badge/Map-Leaflet.js-199900.svg)](https://leafletjs.com/)
-
-**FloodSentinel** is a full-stack, machine-learning-driven disaster early warning system and live meteorological radar tailored for Sri Lanka. Designed for citizens and disaster response authorities (such as the Disaster Management Centre - DMC), it predicts flood occurrence and severity across all 25 Sri Lankan districts using terrain, satellite spectral indices, hydrological stress parameters, and real-time precipitation.
+This branch contains the real-time meteorological ingestion, Doppler radar frame manager, emergency facility lookup, and persistent assessment history service for **FloodSentinel**.
 
 ---
 
-## 📌 Key Highlights
+## 🎯 Branch Purpose
+Primary Owner: **Member 1** (Data Engineering & Weather Service Lead)
 
-- **Real-Time Weather Integration**: Dynamic ingestion of precipitation, 7-day cumulative rainfall, and soil moisture via the **Open-Meteo Weather API**.
-- **Live Doppler Weather Radar**: Interactive animated rain-radar tile layer powered by **RainViewer** overlaid on an interactive Sri Lanka Leaflet map.
-- **Machine Learning Inference Engine**: Cost-sensitive, threshold-optimized ensemble models predicting flood risk and calibrated severity scores.
-- **Four-Tier Alert Level System**:
-  - 🟢 **SAFE (0.00 – 0.25 probability)**: Normal seasonal conditions.
-  - 🟡 **ADVISORY (0.26 – 0.50 probability)**: Moderate risk; monitor river levels and rainfall.
-  - 🟠 **WARNING (0.51 – 0.75 probability)**: High risk; secure documents and prepare evacuation kits.
-  - 🔴 **CRITICAL EMERGENCY (0.76 – 1.00 probability)**: Imminent flooding; immediate evacuation required (DMC Hotline: 117).
-- **Emergency Evacuation Guide**: Automatic distance calculation and routing to the nearest hospital and emergency evacuation shelter.
+Responsible for integrating live, open meteorological APIs (Open-Meteo) and Doppler radar feeds (RainViewer) with resilient in-memory caching and request deduplication, providing nearby emergency shelters and hospital discovery via the OpenStreetMap Overpass API, and maintaining an auditable, persistent district assessment history database.
 
 ---
 
-## 🏗️ System Architecture
+## 📡 Integrated Meteorological & Geospatial APIs
 
-```
-[ Sri Lankan Citizens / DMC Officials ]
-                   │
-                   ▼
-┌────────────────────────────────────────────────────────┐
-│               Frontend Web Application                 │
-│         (React / Vite + TailwindCSS + Leaflet)         │
-│  - Live RainViewer Radar Map    - Risk Gauge Meter     │
-│  - 25 District Selector        - Emergency Cards       │
-└──────────────────────────┬─────────────────────────────┘
-                           │ HTTP POST /api/v1/predict
-                           │ HTTP GET  /api/v1/weather/live
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                 Backend REST API                       │
-│                     (FastAPI)                          │
-│  - Open-Meteo Weather Service   - Pydantic Validation  │
-│  - Feature Engineering Engine   - Evacuation Router    │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│            Trained ML Pipeline (.pkl)                  │
-│  - Imbalance Handled (SMOTE / scale_pos_weight)        │
-│  - Calibrated Decision Threshold (>90% Recall)         │
-└────────────────────────────────────────────────────────┘
-```
+### 1. Open-Meteo Weather API
+- **Endpoint**: `https://api.open-meteo.com/v1/forecast`
+- **Telemetry Ingested**:
+  - `precipitation` (current mm/h rate)
+  - `precipitation_sum` (strictly past 7 completed days cumulative rainfall, excluding today's partial interval)
+  - `temperature_2m` (°C)
+  - `soil_moisture_0_to_7cm` (m³/m³ proxy for surface saturation)
+- **Features**: Connection pooling, 10-minute success TTL cache, and per-coordinate deduplication.
+- **Coverage**: All 25 Sri Lankan administrative districts and point coordinates.
+
+### 2. RainViewer Doppler Radar API
+- **Endpoint**: `https://api.rainviewer.com/public/weather-maps.json`
+- **Purpose**: Fetches real-time radar coverage frames and generates timestamped Doppler tile URLs for Leaflet animated playback.
+
+### 3. OpenStreetMap Overpass API
+- **Endpoint**: `https://overpass-api.de/api/interpreter`
+- **Purpose**: Queries verified hospitals, emergency assembly points, and shelter facilities within a 1–30 km search radius, ranked by straight-line distance.
 
 ---
 
-## 📁 Repository Structure
-
-```
-FloodSentinel/
-├── backend/                  # FastAPI REST API & ML Inference Service
-│   ├── app/
-│   │   ├── api/              # API Route Controllers
-│   │   ├── core/             # Configuration & Settings
-│   │   ├── models/           # Pydantic Schemas
-│   │   └── services/         # Weather API & ML Predictor
-│   └── model/                # Serialized Model Artifacts (.pkl & metadata)
-├── frontend/                 # Interactive Radar Dashboard (React + Vite + Leaflet)
-│   ├── src/
-│   │   ├── components/       # Map, Gauge, Evacuation & Alert Components
-│   │   └── assets/
-│   └── package.json
-├── notebooks/                # Machine Learning Pipeline (11 Stages)
-│   └── flood_prediction_sri_lanka.ipynb
-├── data/                     # Dataset Storage
-├── docs/                     # Project Documentation & Viva Voce Guides
-├── docker-compose.yml        # Multi-container local deployment
-└── README.md
-```
+## 💾 Persistent District Assessment History Service
+- **Storage Engine**: SQLite (`runtime/assessments.sqlite3`), configurable via `HISTORY_DB_PATH`.
+- **Deduplication**: Hashes observation payloads to avoid duplicate records on rapid re-queries.
+- **Retention**: Strictly bounded to the latest 288 records per district (FIFO cleanup).
+- **Graceful Degradation**: Storage failures leave live weather and inference functional while returning explicit HTTP 503 status for history queries.
 
 ---
 
-## 👥 Team & Contribution Matrix (Group of 4)
+## 🔌 API Endpoints Exposed
 
-| Member | ML Pipeline Contribution (`model/ml-pipeline`) | Full-Stack & System Contribution |
-| :--- | :--- | :--- |
-| **Member 1** | Steps 1, 2, 4, 6: Problem Definition, Data Ingestion, Data Cleaning & Stratified Splitting | Backend Open-Meteo Live Weather Service & District Defaults |
-| **Member 2** | Steps 3, 5: Geospatial EDA & 6 Mandatory Domain Feature Engineering Techniques | FastAPI Model Loader, Transformer Engine & Alert Categorizer |
-| **Member 3** | Steps 7, 8: 5-Model Selection Benchmarking & 5-Fold Stratified Cross-Validation | Frontend Leaflet Map with RainViewer Animated Radar Layer |
-| **Member 4** | Steps 9, 10, 11: Cost-Sensitive Evaluation, Optuna Tuning & Model Serialization (`.pkl`) | Emergency Evacuation Locator, Risk Gauge, Docker & DevOps |
-
----
-
-## 🚀 Quick Start (Development)
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/GamithaGimhana/FloodSentinel.git
-cd FloodSentinel
-```
-
-### 2. Backend Setup
-```bash
-cd backend
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
-
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
-API Documentation will be available at: `http://localhost:8000/docs`
-
-### 3. Frontend Setup
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-Dashboard will be available at: `http://localhost:5173`
-
----
-
-## 📄 License
-This project is licensed under the MIT License.
+- `GET /api/v1/weather/live?lat={lat}&lon={lon}` - Real-time point weather estimates.
+- `GET /api/v1/weather/districts` - Baseline weather telemetry across all 25 Sri Lankan districts.
+- `GET /api/v1/weather/districts/{district_id}` - Weather telemetry for a specific district.
+- `GET /api/v1/weather/districts/{district_id}/history?limit={limit}` - Chronological assessment history (limit: 1–288 records).
+- `GET /api/v1/radar/frames` - Timestamped Doppler radar tile frames and playback intervals.
+- `GET /api/v1/emergency/nearby?lat={lat}&lon={lon}&radius_km={radius}` - Nearby hospitals and emergency shelters.
