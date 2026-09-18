@@ -5,8 +5,6 @@ This branch contains the core FastAPI model serving engine and validation pipeli
 ---
 
 ## 🎯 Branch Purpose
-Primary Owner: **Member 2** (ML Optimization & Backend Inference Lead)
-
 Responsible for serving the trained `flood_alert_pipeline.pkl` model, validating incoming 23-feature telemetry dictionaries against strict Pydantic schemas, executing scenario stress tests, and applying isotonic calibration with the optimal $F_2$ decision threshold.
 
 ---
