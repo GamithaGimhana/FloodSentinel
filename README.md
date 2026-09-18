@@ -5,8 +5,6 @@ This branch contains the user interface, geospatial visualization system, distri
 ---
 
 ## 🎯 Branch Purpose
-Primary Owner: **Member 3** (Frontend & Geospatial Lead)
-
 Responsible for building a modern, responsive React/TypeScript application that renders an interactive map of Sri Lanka, displays animated live weather radar layers, visualizes district flood alert levels, provides an end-to-end 23-feature model assessment interface, and renders real-time district assessment headlines with historical timeline charts.
 
 ---
