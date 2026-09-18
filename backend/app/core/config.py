@@ -1,9 +1,6 @@
 import os
 from typing import List
 from pydantic import BaseModel
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class Settings(BaseModel):
@@ -13,7 +10,7 @@ class Settings(BaseModel):
     VERSION: str = "1.0.0"
 
     # CORS configuration
-    CORS_ORIGINS: List[str] = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+    CORS_ORIGINS: List[str] = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173').split(',')
 
     # Open-Meteo API config
     OPEN_METEO_BASE_URL: str = os.getenv("OPEN_METEO_BASE_URL", "https://api.open-meteo.com/v1/forecast")

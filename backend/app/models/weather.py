@@ -50,6 +50,9 @@ class DistrictTelemetry(BaseModel):
     prediction: PredictionResponse | None = None
     observed_at: str | None = None
     assumptions: list[str] = Field(default_factory=list)
+    assessment_inputs: dict[str, str | float | int] = Field(default_factory=dict)
+    input_sources: dict[str, str] = Field(default_factory=dict)
+    history_status: Literal['recorded', 'unavailable', 'not_recorded'] = 'not_recorded'
 
 class DistrictsWeatherResponse(BaseModel):
     total_districts: int
